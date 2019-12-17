@@ -53,7 +53,6 @@ class IxDTLModel:
 
         # construct the original haplotype tree according to the species tree
         self.constructOriginalHaplotypeTree()
-        print(self.haplotypeTree.coalescentProcess)
 
         # run dtl process
         events = self.haplotypeTree.dtlProcess(distanceAboveRoot=0)
@@ -149,7 +148,7 @@ class IxDTLModel:
 
         self.speciesTree.setCoalescentRate(
             coalescentPrmt=self.__parameters['coalescent'])
-        # print(self.speciesTree)	
+        
         if self.__parameters['verbose']:
             print('species tree:')	
             print(self.speciesTree)	

@@ -40,14 +40,13 @@ class LocusTree(SpeciesTree):
                 for clade in mergingSet['fromSet']:
                     if self._starInSet(target=clade, clade=chosenGene):
                         fromSet.append(clade)
-                if mergingSet['toSet']:
-                    for clade in mergingSet['toSet']:
-                        if self._starInSet(target=clade, clade=chosenGene):
-                            toSet.append(clade)
-                    if toSet:
-                        selectedCoalescentProcess[speciesNodeId].append({
-                            'fromSet': fromSet, 
-                            'toSet': toSet,
-                            'distance': distance
-                        })
+                for clade in mergingSet['toSet']:
+                    if self._starInSet(target=clade, clade=chosenGene):
+                        toSet.append(clade)
+                if toSet:
+                    selectedCoalescentProcess[speciesNodeId].append({
+                        'fromSet': fromSet, 
+                        'toSet': toSet,
+                        'distance': distance
+                    })
         return selectedCoalescentProcess

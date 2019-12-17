@@ -265,12 +265,12 @@ class HaplotypeTree:
         self.__treeTable = TreeTable()
         self.__treeTable.createFromSkbioTree(skbioTree, rename)
 
-    def dlProcess(self, distanceAboveRoot, event=None):
+    def dtlProcess(self, distanceAboveRoot, event=None):
         events = []
         # trivial case
         if len(self.getNodes()) == 1:
             distanceAboveRoot = event['distanceToGeneNode']
-        self.__dlProcessRecurse(
+        self.__dtlProcessRecurse(
             skbioTreeNode=self.getSkbioTree(), distanceAboveRoot=distanceAboveRoot, events=events)
         return events
 
@@ -281,18 +281,21 @@ class HaplotypeTree:
             indices.append(int(index))
         return mean(self.eventRates[eventType][indices])
 
-    def __dlProcessRecurse(self, skbioTreeNode, distanceAboveRoot, events):
+    def __dtlProcessRecurse(self, skbioTreeNode, distanceAboveRoot, events):
         node = self.getNodeByName(skbioTreeNode.name)
 
         distanceD = self.randomState.exponential(
             scale=1.0 / self.__getEventRateInAncestralBranch(
                 eventType='d', clade=node.name))
+        distanceT = self.randomState.exponential(
+            scale=1.0 / self.__getEventRateInAncestralBranch(
+                eventType='t', clade=node.name))
         distanceL = self.randomState.exponential(
             scale=1.0 / self.__getEventRateInAncestralBranch(
                 eventType='l', clade=node.name))
 
         # duplication happens first
-        if (distanceD < distanceL and distanceD < distanceAboveRoot):
+        if (distanceD < min(distanceL, distanceT) and distanceD < distanceAboveRoot):
             eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceD
             speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
                 geneId=node.id, eventHeight=eventHeight, speciesId=None)
@@ -307,10 +310,33 @@ class HaplotypeTree:
                 'index': -1
             })
             # looking for more events on the same branch
-            self.__dlProcessRecurse(
+            self.__dtlProcessRecurse(
                 skbioTreeNode=skbioTreeNode, 
                 distanceAboveRoot=distanceAboveRoot - distanceD, events=events)
-        elif (distanceL <= distanceD and distanceL < distanceAboveRoot):      
+        elif (distanceT <= min(distanceD, distanceL) and distanceT < distanceAboveRoot):
+            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceT
+            speciesTreeHeight = self.speciesTree.getTreeHeight()
+            if eventHeight < speciesTreeHeight:
+                target, originalSpeciesId = self.__findTransferTarget(
+                    eventHeight=eventHeight, geneId=node.id)
+                speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
+                    geneId=node.id, eventHeight=eventHeight, speciesId=None)
+                if target:
+                    events.append({
+                        'type': 'transfer',
+                        'geneNodeId': node.id,      # closest gene node to the event from below
+                        'geneNodeName': node.name, 
+                        'distanceToGeneNode': distanceAboveRoot - distanceT,
+                        'targetSpeciesId': target,
+                        'eventHeight': eventHeight,
+                        'speciesNodeId': speciesId,      # closest species node to the event from below
+                        'distanceToSpeciesNode': distanceAboveSpeciesNode,
+                        'index': -1
+                    })
+            self.__dtlProcessRecurse(
+                skbioTreeNode=skbioTreeNode, 
+                distanceAboveRoot=distanceAboveRoot - distanceT, events=events)
+        elif (distanceL <= min(distanceD, distanceT) and distanceL < distanceAboveRoot):      
             # loss happens first, the seaching process stops at the loss point
             eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceL
             speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
@@ -332,89 +358,10 @@ class HaplotypeTree:
                 childR = skbioTreeNode.children[1]
                 distanceToChildL = node.distanceToChildren[0]
                 distanceToChildR = node.distanceToChildren[1]
-                self.__dlProcessRecurse(
+                self.__dtlProcessRecurse(
                     skbioTreeNode=childL, 
                     distanceAboveRoot=distanceToChildL, events=events)
-                self.__dlProcessRecurse(
-                    skbioTreeNode=childR, 
-                    distanceAboveRoot=distanceToChildR, events=events)
-            # else: if not exist, reach the leaves of the tree, searching process stops
-
-
-    def dtProcess(self, distanceAboveRoot, event=None):
-        events = []
-        # trivial case
-        if len(self.getNodes()) == 1:
-            distanceAboveRoot = event['distanceToGeneNode']
-        self.__dtProcessRecurse(
-            skbioTreeNode=self.getSkbioTree(), distanceAboveRoot=distanceAboveRoot, events=events)
-        return events
-
-    def __dtProcessRecurse(self, skbioTreeNode, distanceAboveRoot, events):
-        threshold = self.getTreeHeight() + distanceAboveRoot
-        node = self.getNodeByName(skbioTreeNode.name)
-
-        distanceD = self.randomState.exponential(
-            scale=1.0 / self.__getEventRateInAncestralBranch(
-                eventType='d', clade=node.name))
-        distanceT = self.randomState.exponential(
-            scale=1.0 / self.__getEventRateInAncestralBranch(
-                eventType='l', clade=node.name))
-
-        # duplication happens first
-        if (distanceD < distanceT and distanceD < distanceAboveRoot):
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceD
-            speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
-                geneId=node.id, eventHeight=eventHeight, speciesId=None)
-            if eventHeight > threshold:
-                events.append({
-                    'type': 'duplication',
-                    'geneNodeId': -1,      # closest gene node to the event from below
-                    'geneNodeName': -1, 
-                    'distanceToGeneNode': -1,
-                    'eventHeight': eventHeight,
-                    'speciesNodeId': speciesId,
-                    'distanceToSpeciesNode': distanceAboveSpeciesNode,
-                    'index': -1
-                })
-            # looking for more events on the same branch
-            self.__dtProcessRecurse(
-                skbioTreeNode=skbioTreeNode, 
-                distanceAboveRoot=distanceAboveRoot - distanceD, events=events)
-        elif (distanceT <= distanceD and distanceT < distanceAboveRoot):
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceT
-            speciesTreeHeight = self.speciesTree.getTreeHeight()
-            if eventHeight < speciesTreeHeight:
-                target, originalSpeciesId = self.__findTransferTarget(
-                    eventHeight=eventHeight, geneId=node.id)
-                speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
-                    geneId=node.id, eventHeight=eventHeight, speciesId=None)
-                if target and eventHeight > threshold:
-                    events.append({
-                        'type': 'transfer',
-                        'geneNodeId': -1,      # closest gene node to the event from below
-                        'geneNodeName': -1, 
-                        'distanceToGeneNode': -1,
-                        'targetSpeciesId': target,
-                        'eventHeight': eventHeight,
-                        'speciesNodeId': speciesId,      # closest species node to the event from below
-                        'distanceToSpeciesNode': distanceAboveSpeciesNode,
-                        'index': -1
-                    })
-            self.__dtProcessRecurse(
-                skbioTreeNode=skbioTreeNode, 
-                distanceAboveRoot=distanceAboveRoot - distanceT, events=events)
-        else:
-            # reach the end the current branch, looking for events in the 2 children branches
-            if (node.children):     # if children branches exist
-                childL = skbioTreeNode.children[0]
-                childR = skbioTreeNode.children[1]
-                distanceToChildL = node.distanceToChildren[0]
-                distanceToChildR = node.distanceToChildren[1]
-                self.__dtProcessRecurse(
-                    skbioTreeNode=childL, 
-                    distanceAboveRoot=distanceToChildL, events=events)
-                self.__dtProcessRecurse(
+                self.__dtlProcessRecurse(
                     skbioTreeNode=childR, 
                     distanceAboveRoot=distanceToChildR, events=events)
             # else: if not exist, reach the leaves of the tree, searching process stops
@@ -443,12 +390,14 @@ class HaplotypeTree:
             # non-trivial case
             for speciesNodeId, mergingSets in self.coalescentProcess.items():
                 for mergingSet in mergingSets:
-                    if (mergingSet['toSet']
-                        and geneName in mergingSet['toSet'] 
+                    if (geneName in mergingSet['toSet'] 
                         and geneName not in mergingSet['fromSet']):
                         speciesId = speciesNodeId
             if speciesId == None:
-                speciesId = int(geneName[:-1])    
+                speciesId = int(geneName[:-1])
+        else:
+            # trivial case
+            speciesId = int(geneName[:-1])     
         return speciesId
 
     def __findTransferTarget(self, eventHeight, geneId):
@@ -674,7 +623,6 @@ class HaplotypeTree:
                 if node.name in newLocusTreeNames]
             newLocusTree = LocusTree(randomState=self.randomState)
             newLocusTree.initialize(nodes=newLocusTreeNodes, skbioTree=newLocusSkbioTree)
-            # print('newLocusTree', newLocusTree)	
             newLocusTree.coalescentRate = self.speciesTree.coalescentRate
 
             locusTreeCoalescentProcess = None
@@ -694,26 +642,13 @@ class HaplotypeTree:
 
             rootLength = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
             newHaplotypeTree.getSkbioTree().length = rootLength
-            newHaplotypeTreeEvents = newHaplotypeTree.dlProcess(
+            
+            newHaplotypeTreeEvents = newHaplotypeTree.dtlProcess(
                 event=event, distanceAboveRoot=rootLength)
-
-            coalescentTreeProcess = None
-            coalescentTreeProcess = newLocusTree.coalescent(10000)
-            coalescentTree = HaplotypeTree(
-                randomState=self.randomState, speciesTree=self.speciesTree)
-            coalescentTree.initialize(
-                locusTree=newLocusTree, 
-                coalescentProcess=coalescentTreeProcess, rename=False)
-            coalescentTree.eventRates = self.eventRates
-            rootLength = event['eventHeight'] - coalescentTree.getTreeHeight()
-            newCoalescentTreeEvents = coalescentTree.dtProcess(
-                event=event, distanceAboveRoot=rootLength)
-
-            newEvents = newHaplotypeTreeEvents + newCoalescentTreeEvents
-            newEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
+            newHaplotypeTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
 
             newHaplotypeTree.dtSubtree(
                 coalescentProcess=locusTreeCoalescentProcess, 
-                events=newEvents, haplotypeTree=newHaplotypeTree, 
+                events=newHaplotypeTreeEvents, haplotypeTree=newHaplotypeTree, 
                 level=level + 1)
             return newHaplotypeTree
