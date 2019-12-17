@@ -1,0 +1,2 @@
+class IxDTLError(Exception):
+    pass
