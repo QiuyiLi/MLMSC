@@ -51,3 +51,48 @@ class LocusTree(SpeciesTree):
                             'distance': distance
                         })
         return selectedCoalescentProcess
+
+    def unlinkingProcess(self, distanceAboveRoot, event):
+        unlinkPoints = [] 
+        unlinkedSpecies = []
+        for e in self.getLeaves():
+            unlinkedSpecies.append(e.id)
+        if len(self.getNodes()) == 1:
+            distanceAboveRoot = event['distanceToSpeciesNode']
+        self.__unlinkingProcessRecurse(
+            skbioTreeNode=self.getSkbioTree(), 
+            distanceAboveRoot=distanceAboveRoot, 
+            unlinkPoints=unlinkPoints, unlinkedSpecies=unlinkedSpecies)
+        return unlinkPoints, unlinkedSpecies
+
+    def __unlinkingProcessRecurse(self, skbioTreeNode, distanceAboveRoot, unlinkPoints, unlinkedSpecies):
+        node = self.getNodeByName(skbioTreeNode.name)
+        unlinkRate = 1.0
+        distanceU = self.randomState.exponential(
+            scale=1.0 / unlinkRate)
+
+        if (distanceU < distanceAboveRoot):      
+            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceU
+            unlinkPoints.append({
+                'SpeciesNodeId': node.id,      # closest gene node to the event from below 
+                'distanceToSpeciesNode': distanceAboveRoot - distanceU,
+                'eventHeight': eventHeight,
+            })
+        else:
+            # reach the end the current branch, looking for events in the 2 children branches
+            if (node.children):     # if children branches exist
+                childL = skbioTreeNode.children[0]
+                childR = skbioTreeNode.children[1]
+                distanceToChildL = node.distanceToChildren[0]
+                distanceToChildR = node.distanceToChildren[1]
+                self.__unlinkingProcessRecurse(
+                    skbioTreeNode=childL, 
+                    distanceAboveRoot=distanceToChildL, 
+                    unlinkPoints=unlinkPoints, linkedSpecies=unlinkedSpecies)
+                self.__unlinkingProcessRecurse(
+                    skbioTreeNode=childR, 
+                    distanceAboveRoot=distanceToChildR, 
+                    unlinkPoints=unlinkPoints, linkedSpecies=unlinkedSpecies)
+            else:
+                unlinkedSpecies.remove(node.id)
+            # else: if not exist, reach the leaves of the tree, searching process stops

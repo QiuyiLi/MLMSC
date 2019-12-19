@@ -538,6 +538,35 @@ class HaplotypeTree:
     #                 # print('find speciation at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
     #                 #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
 
+    def cutTree(self, coalescentProcess, unlinkpoints):
+        for unlinkpoint in unlinkpoints:
+            nodeId = unlinkpoint['speciesNodeId']
+            unlinkNode = self.getNodeById(nodeId)
+            unlinkDistance = unlinkpoint['distanceToSpeciesNode']
+            coalDistance = 0
+            for mergingSet in coalescentProcess[nodeId]:
+                coalDistance = coalDistance + mergingSet['distance']
+                if coalDistance < unlinkDistance:
+                    coalescentProcess[nodeId].pop(0)
+                else:
+                    break
+            coalescentProcess = self.__cutTreeRecurse(
+                coalescentProcess=coalescentProcess, unlinkNode=unlinkNode, 
+                unlinkDistance=unlinkDistance)
+        return coalescentProcess
+
+    def __cutTreeRecurse(self, coalescentProcess, unlinkNode, unlinkDistance):
+        if unlinkNode.children: 
+            children = unlinkNode.children
+            for child in children:
+                coalescentProcess[child] = []
+                self.__cutTreeRecurse(coalescentProcess, child, unlinkDistance)
+        return coalescentProcess
+
+    def jointCoalescent(self, copiedHaplotypeTree, unlinkedSpecies):
+        
+        return
+
     def dtSubtree(self, coalescentProcess, events, haplotypeTree, level):
         """
         1. simulate all the events on the haplotype tree 
@@ -698,7 +727,8 @@ class HaplotypeTree:
                 event=event, distanceAboveRoot=rootLength)
 
             coalescentTreeProcess = None
-            coalescentTreeProcess = newLocusTree.coalescent(10000)
+            coalescentTreeProcess, cladeSetIntoRoot = newLocusTree.coalescent(
+                distanceAboveRoot=float('inf'))
             coalescentTree = HaplotypeTree(
                 randomState=self.randomState, speciesTree=self.speciesTree)
             coalescentTree.initialize(

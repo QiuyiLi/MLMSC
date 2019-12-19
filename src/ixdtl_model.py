@@ -1,4 +1,5 @@
 import numpy as np
+import pprint
 from .species_tree import *
 from .haplotype_tree import *
 from .exception import *
@@ -53,8 +54,9 @@ class IxDTLModel:
 
         # construct the original haplotype tree according to the species tree
         self.constructOriginalHaplotypeTree()
-        print(self.haplotypeTree.coalescentProcess)
+        pprint.pprint(self.haplotypeTree.coalescentProcess)
 
+        return 0
         # run dtl process
         events = self.haplotypeTree.dtlProcess(distanceAboveRoot=0)
         events.sort(reverse=True, key=lambda x: x['eventHeight'])
