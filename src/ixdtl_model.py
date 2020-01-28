@@ -54,19 +54,38 @@ class IxDTLModel:
 
         # construct the original haplotype tree according to the species tree
         self.constructOriginalHaplotypeTree()
-        pprint.pprint(self.haplotypeTree.coalescentProcess)
-
-        return 0
+        # pprint.pprint(self.haplotypeTree.coalescentProcess)
+        # return 0
         # run dtl process
-        events = self.haplotypeTree.dtlProcess(distanceAboveRoot=0)
+
+        coalescentTreeProcess, cladeSetIntoRoot = self.speciesTree.coalescent(
+                distanceAboveRoot=float('inf'))
+        coalescentTree = HaplotypeTree(
+            randomState=self.haplotypeTree.randomState, speciesTree=self.haplotypeTree.speciesTree)
+        coalescentTree.initialize(
+            locusTree=self.speciesTree, 
+            coalescentProcess=coalescentTreeProcess, 
+            fullCoalescentProcess=coalescentTreeProcess,
+            rename=False)
+        coalescentTree.eventRates = self.haplotypeTree.eventRates
+        coalescentTreeEvents = coalescentTree.dtProcess(
+            distanceAboveRoot=0, threshold=1000, event=None)
+
+
+
+
+
+
+        events = self.haplotypeTree.dlProcess(distanceAboveRoot=0) + coalescentTreeEvents
+        
         events.sort(reverse=True, key=lambda x: x['eventHeight'])
-
         # run dt subtree
-        geneTree = self.haplotypeTree.dtSubtree(
-            coalescentProcess=self.haplotypeTree.coalescentProcess, 
-            events=events, haplotypeTree=self.haplotypeTree, level=0)
+        print('======5')
+        geneTree = self.haplotypeTree.dtSubtree(events=events, 
+            haplotypeTree=self.haplotypeTree, level=0)
+        print('======6')
         geneSkbioTree = geneTree.getSkbioTree()
-
+        print('======7')
         # cut the tree 
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()

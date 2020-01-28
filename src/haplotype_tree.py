@@ -16,6 +16,7 @@ class HaplotypeTree:
         self.__speciesTree = speciesTree
 
         self.__coalescentProcess = None
+        self.__fullCoalescentProcess = None
         self.__treeTable = None
         self.__eventRates = {}
         self.__recombination = None
@@ -39,6 +40,10 @@ class HaplotypeTree:
     @property
     def coalescentProcess(self):
         return self.__coalescentProcess
+
+    @property
+    def fullCoalescentProcess(self):
+        return self.__fullCoalescentProcess
 
     @property
     def treeTable(self):
@@ -86,15 +91,16 @@ class HaplotypeTree:
     def getTreeHeight(self):
         return self.__treeTable.treeHeight
 
-    def getDistanceToLeaf(self, nodeId, branchDistance):
+    def getDistanceToLeaf(self, nodeId, branchDistance=0):
         return self.__treeTable.distanceToLeaf(nodeId, branchDistance)
 
-    def initialize(self, locusTree, coalescentProcess=None, rename=True):
+    def initialize(self, locusTree, coalescentProcess=None, fullCoalescentProcess=None, rename=True):
         if not coalescentProcess:
             # ordinary coalesent for constructing the original haplotype tree
             coalescentProcess, cladeSetIntoRoot = locusTree.coalescent(
                 distanceAboveRoot=float('inf'))
         self.__coalescentProcess = coalescentProcess
+        self.__fullCoalescentProcess = coalescentProcess
 
         timeSequences = locusTree.getTimeSequences(
             coalescentProcess=coalescentProcess)
@@ -284,35 +290,35 @@ class HaplotypeTree:
     def __dlProcessRecurse(self, skbioTreeNode, distanceAboveRoot, events):
         node = self.getNodeByName(skbioTreeNode.name)
 
-        distanceD = self.randomState.exponential(
-            scale=1.0 / self.__getEventRateInAncestralBranch(
-                eventType='d', clade=node.name))
+        # distanceD = self.randomState.exponential(
+        #     scale=1.0 / self.__getEventRateInAncestralBranch(
+        #         eventType='d', clade=node.name))
         distanceL = self.randomState.exponential(
             scale=1.0 / self.__getEventRateInAncestralBranch(
                 eventType='l', clade=node.name))
 
         # duplication happens first
-        if (distanceD < distanceL and distanceD < distanceAboveRoot):
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceD
-            speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
-                geneId=node.id, eventHeight=eventHeight, speciesId=None)
-            events.append({
-                'type': 'duplication',
-                'geneNodeId': node.id,      # closest gene node to the event from below
-                'geneNodeName': node.name, 
-                'distanceToGeneNode': distanceAboveRoot - distanceD,
-                'eventHeight': eventHeight,
-                'speciesNodeId': speciesId,
-                'distanceToSpeciesNode': distanceAboveSpeciesNode,
-                'index': -1
-            })
-            # looking for more events on the same branch
-            self.__dlProcessRecurse(
-                skbioTreeNode=skbioTreeNode, 
-                distanceAboveRoot=distanceAboveRoot - distanceD, events=events)
-        elif (distanceL <= distanceD and distanceL < distanceAboveRoot):      
+        # if (distanceD < distanceL and distanceD < distanceAboveRoot):
+        #     eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceD
+        #     speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
+        #         geneId=node.id, eventHeight=eventHeight, speciesId=None)
+        #     events.append({
+        #         'type': 'duplication',
+        #         'geneNodeId': node.id,      # closest gene node to the event from below
+        #         'geneNodeName': node.name, 
+        #         'distanceToGeneNode': distanceAboveRoot - distanceD,
+        #         'eventHeight': eventHeight,
+        #         'speciesNodeId': speciesId,
+        #         'distanceToSpeciesNode': distanceAboveSpeciesNode,
+        #         'index': -1
+        #     })
+        #     # looking for more events on the same branch
+        #     self.__dlProcessRecurse(
+        #         skbioTreeNode=skbioTreeNode, 
+        #         distanceAboveRoot=distanceAboveRoot - distanceD, events=events)
+        if (distanceL < distanceAboveRoot):      
             # loss happens first, the seaching process stops at the loss point
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceL
+            eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceL
             speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
                 geneId=node.id, eventHeight=eventHeight, speciesId=None)
             events.append({
@@ -340,18 +346,18 @@ class HaplotypeTree:
                     distanceAboveRoot=distanceToChildR, events=events)
             # else: if not exist, reach the leaves of the tree, searching process stops
 
-
-    def dtProcess(self, distanceAboveRoot, event=None):
+    def dtProcess(self, distanceAboveRoot, threshold=100000, event=None):
         events = []
         # trivial case
         if len(self.getNodes()) == 1:
             distanceAboveRoot = event['distanceToGeneNode']
         self.__dtProcessRecurse(
-            skbioTreeNode=self.getSkbioTree(), distanceAboveRoot=distanceAboveRoot, events=events)
+            skbioTreeNode=self.getSkbioTree(), distanceAboveRoot=distanceAboveRoot, 
+                threshold=threshold, events=events)
         return events
 
-    def __dtProcessRecurse(self, skbioTreeNode, distanceAboveRoot, events):
-        threshold = self.getTreeHeight() + distanceAboveRoot
+    def __dtProcessRecurse(self, skbioTreeNode, distanceAboveRoot, threshold, events):
+        unlinkedProb = 0.5
         node = self.getNodeByName(skbioTreeNode.name)
 
         distanceD = self.randomState.exponential(
@@ -359,14 +365,19 @@ class HaplotypeTree:
                 eventType='d', clade=node.name))
         distanceT = self.randomState.exponential(
             scale=1.0 / self.__getEventRateInAncestralBranch(
-                eventType='l', clade=node.name))
+                eventType='t', clade=node.name))
 
         # duplication happens first
         if (distanceD < distanceT and distanceD < distanceAboveRoot):
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceD
+            eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceD
             speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
                 geneId=node.id, eventHeight=eventHeight, speciesId=None)
-            if eventHeight > threshold:
+            unlinked = np.random.binomial(1, unlinkedProb)
+            if unlinked == 1:
+                unlinked = True
+            else:
+                unlinked = False
+            if eventHeight < threshold:
                 events.append({
                     'type': 'duplication',
                     'geneNodeId': -1,      # closest gene node to the event from below
@@ -375,35 +386,37 @@ class HaplotypeTree:
                     'eventHeight': eventHeight,
                     'speciesNodeId': speciesId,
                     'distanceToSpeciesNode': distanceAboveSpeciesNode,
+                    'unlinked': unlinked,
                     'index': -1
                 })
             # looking for more events on the same branch
-            self.__dtProcessRecurse(
-                skbioTreeNode=skbioTreeNode, 
-                distanceAboveRoot=distanceAboveRoot - distanceD, events=events)
+            self.__dtProcessRecurse(skbioTreeNode=skbioTreeNode, 
+                distanceAboveRoot=distanceAboveRoot - distanceD, threshold=threshold, events=events)
         elif (distanceT <= distanceD and distanceT < distanceAboveRoot):
-            eventHeight = self.getDistanceToLeaf(node.id, 0) + distanceAboveRoot - distanceT
+            eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceT
             speciesTreeHeight = self.speciesTree.getTreeHeight()
             if eventHeight < speciesTreeHeight:
-                target, originalSpeciesId = self.__findTransferTarget(
+                originalSpeciesId, targetSpeciesId = self.__findTransferOrigin(
                     eventHeight=eventHeight, geneId=node.id)
-                speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
-                    geneId=node.id, eventHeight=eventHeight, speciesId=None)
-                if target and eventHeight > threshold:
+                # speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
+                #     geneId=node.id, eventHeight=eventHeight, speciesId=None)
+                distanceAboveSpeciesNode = eventHeight - self.speciesTree.getDistanceToLeaf(originalSpeciesId)
+                if originalSpeciesId and eventHeight < threshold:
                     events.append({
                         'type': 'transfer',
                         'geneNodeId': -1,      # closest gene node to the event from below
                         'geneNodeName': -1, 
                         'distanceToGeneNode': -1,
-                        'targetSpeciesId': target,
+                        'targetSpeciesId': targetSpeciesId,
                         'eventHeight': eventHeight,
-                        'speciesNodeId': speciesId,      # closest species node to the event from below
+                        'speciesNodeId': originalSpeciesId,      # closest species node to the event from below
                         'distanceToSpeciesNode': distanceAboveSpeciesNode,
+                        'unlinked': True,
                         'index': -1
                     })
             self.__dtProcessRecurse(
                 skbioTreeNode=skbioTreeNode, 
-                distanceAboveRoot=distanceAboveRoot - distanceT, events=events)
+                distanceAboveRoot=distanceAboveRoot - distanceT, threshold=threshold, events=events)
         else:
             # reach the end the current branch, looking for events in the 2 children branches
             if (node.children):     # if children branches exist
@@ -413,22 +426,22 @@ class HaplotypeTree:
                 distanceToChildR = node.distanceToChildren[1]
                 self.__dtProcessRecurse(
                     skbioTreeNode=childL, 
-                    distanceAboveRoot=distanceToChildL, events=events)
+                    distanceAboveRoot=distanceToChildL, threshold=threshold, events=events)
                 self.__dtProcessRecurse(
                     skbioTreeNode=childR, 
-                    distanceAboveRoot=distanceToChildR, events=events)
+                    distanceAboveRoot=distanceToChildR, threshold=threshold, events=events)
             # else: if not exist, reach the leaves of the tree, searching process stops
 
     # M function: map the event point to where it occurs in the species tree
     def __mapEventToSpeciesTree(self, geneId, eventHeight, speciesId=None):
         if speciesId == None:
             speciesId = self.__mapGeneIdToSpeciesId(geneId=geneId)
-        distanceAboveSpeciesNode = eventHeight - self.speciesTree.getDistanceToLeaf(speciesId, 0)
+        distanceAboveSpeciesNode = eventHeight - self.speciesTree.getDistanceToLeaf(speciesId)
         if speciesId == self.speciesTree.getRoot().id:
             return speciesId, distanceAboveSpeciesNode
         else:
             speciesIdParent = self.speciesTree.getNodeById(speciesId).parent
-            speciesDistanceParent = self.speciesTree.getDistanceToLeaf(speciesIdParent, 0)
+            speciesDistanceParent = self.speciesTree.getDistanceToLeaf(speciesIdParent)
             if speciesDistanceParent > eventHeight:
                 return speciesId, distanceAboveSpeciesNode
             else:
@@ -461,113 +474,77 @@ class HaplotypeTree:
             if node.id == self.speciesTree.getRoot().id:
                 continue
             parentHeight = self.speciesTree.getDistanceToLeaf(
-                self.speciesTree.getNodeById(node.parent).id, 0)
+                self.speciesTree.getNodeById(node.parent).id)
             if parentHeight > eventHeight:
-                nodeHeight = self.speciesTree.getDistanceToLeaf(node.id, 0)
+                nodeHeight = self.speciesTree.getDistanceToLeaf(node.id)
                 if nodeHeight <= eventHeight:
                     nodesList.append(node.id)
         return self.randomState.choice(nodesList), originSpeciesId
+    
+    def __findTransferOrigin(self, eventHeight, geneId):
+        speciesNodes = self.speciesTree.getNodes()
+        targetSpeciesId = self.__mapGeneIdToSpeciesId(geneId=geneId)
+        nodesList = []
+        for node in speciesNodes:
+            if node.id == targetSpeciesId:
+                continue
+            if node.id == self.speciesTree.getRoot().id:
+                continue
+            parentHeight = self.speciesTree.getDistanceToLeaf(
+                self.speciesTree.getNodeById(node.parent).id)
+            if parentHeight > eventHeight:
+                nodeHeight = self.speciesTree.getDistanceToLeaf(node.id)
+                if nodeHeight <= eventHeight:
+                    nodesList.append(node.id)
+        return self.randomState.choice(nodesList), targetSpeciesId
 
-    # def find_ils(self, path):
-    #     for i in range(len(self.nodes)):
-    #         # searching in backward order
-    #         j = len(self.nodes)-1-i 
-    #         geneNode = self.getNodeById(j)
-    #         clades = geneNode.name.split('*')[:-1]
-    #         clades = [int(j) for j in clades]
-    #         geneNode.clades = clades
+    def coalescentJoining(self, event, fullCoalescentProcess, selectedCoalescentProcess):
+        nodeId = event['speciesNodeId']
+        distanceAboveSpeciesNode = event['distanceToSpeciesNode']
+        print(distanceAboveSpeciesNode)
+        geneNodeName, distanceAboveGeneNode, branchLength = self.__coalescentJoiningRecurse(
+            nodeId=nodeId, event=event, fullCoalescentProcess=fullCoalescentProcess, 
+            selectedCoalescentProcess=selectedCoalescentProcess,
+            distanceAboveSpeciesNode=distanceAboveSpeciesNode, branchLength=0)
 
-    #         if (geneNode.children and not geneNode.splits):
-    #             for i in range(len(geneNode.children)):
-    #                 geneChildName = self.getNodeById(geneNode.children[i]).name 
-    #                 childClades = geneChildName.split('*')[:-1]
-    #                 childClades = [int(j) for j in childClades]
-    #                 geneNode.splits.append(childClades)
+        return geneNodeName, distanceAboveGeneNode, branchLength
 
-    #         foundSpeciesNode = False
-    #         # find lowest possibile species node, then trace back
-    #         for speciesNode in self.speciesTree.getNodes: 
-    #             if (set(node.clade).issuperset(set(gene_clade))):
-    #                 foundSpeciesNode = True
-    #                 species_node = node
-    #                 break
-    #         if not foundSpeciesNode:
-    #             continue
-    #         species_clade = species_node.clade
-    #         species_splits = species_node.clade_split
-    #         find_ils = False
-    #         if (gene_splits):
-    #             gene_split_0 = set(gene_splits[0])
-    #             gene_split_1 = set(gene_splits[1])
-    #             for species_split in species_splits:
-    #                 if (set(species_split).intersection(gene_split_0) and set(species_split).intersection(gene_split_1)):
-    #                     find_ils = True
-    #                     break
-    #         if (find_ils):
-    #             species_id = self.map_gene_id_to_species_id(j)
-    #             index = Utility.increment()
-    #             self.full_events.append({
-    #                 'type': 'ils',
-    #                 'gene_node_id': j, 
-    #                 'gene_node_name': node.name, 
-    #                 'species_node_id': species_id,
-    #                 'index': index
-    #             })
-    #             # Debug.event_count['I'] += 1
-    #             file_name = 'ils_' + str(index)
-    #             f = open(os.path.join(path, file_name), 'w')
-    #             f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
-    #             f.close()
-    #             # print('find ils at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
-    #             #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
-    #         else: 
-    #             if (gene_splits):
-    #                 species_id = self.map_gene_id_to_species_id(j)
-    #                 index = Utility.increment()
-    #                 self.full_events.append({
-    #                     'type': 's',
-    #                     'gene_node_id': j, 
-    #                     'gene_node_name': node.name, 
-    #                     'species_node_id': species_id,
-    #                     'index': index
-    #                 })
-    #                 file_name = 's_' + str(index)
-    #                 f = open(os.path.join(path, file_name), 'w')
-    #                 f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
-    #                 f.close()
-    #                 # print('find speciation at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
-    #                 #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
-
-    def cutTree(self, coalescentProcess, unlinkpoints):
-        for unlinkpoint in unlinkpoints:
-            nodeId = unlinkpoint['speciesNodeId']
-            unlinkNode = self.getNodeById(nodeId)
-            unlinkDistance = unlinkpoint['distanceToSpeciesNode']
-            coalDistance = 0
-            for mergingSet in coalescentProcess[nodeId]:
-                coalDistance = coalDistance + mergingSet['distance']
-                if coalDistance < unlinkDistance:
-                    coalescentProcess[nodeId].pop(0)
+    def __coalescentJoiningRecurse(self, nodeId, event, fullCoalescentProcess, selectedCoalescentProcess, 
+        distanceAboveSpeciesNode, branchLength):
+        coalescentRate = 1
+        coalescentProcess = fullCoalescentProcess[nodeId]
+        selectedProcess = selectedCoalescentProcess[nodeId]
+        distance = 0
+        for e in coalescentProcess:
+            distance += e['distance']
+            if distance >= distanceAboveSpeciesNode:
+                distanceAboveSpeciesNode = 0
+                size = len(e['fromSet'])
+                coalDistance = min(self.randomState.exponential(
+                    scale=1.0 / coalescentRate, size=size))
+                if coalDistance < distance - distanceAboveSpeciesNode:
+                    geneNodeName = np.random.choice(e['fromSet'])
+                    geneNodeId = self.getNodeByName(geneNodeName).id
+                    distanceAboveGeneNode = coalDistance+event['eventHeight']-self.getDistanceToLeaf(geneNodeId)
+                    branchLength += coalDistance
+                    for element in selectedProcess:
+                        if geneNodeName in element['fromSet']:
+                            return geneNodeName, distanceAboveGeneNode, branchLength
+                    # coalesecent with unselected tree
+                    return None, None, None
+                    
                 else:
-                    break
-            coalescentProcess = self.__cutTreeRecurse(
-                coalescentProcess=coalescentProcess, unlinkNode=unlinkNode, 
-                unlinkDistance=unlinkDistance)
-        return coalescentProcess
-
-    def __cutTreeRecurse(self, coalescentProcess, unlinkNode, unlinkDistance):
-        if unlinkNode.children: 
-            children = unlinkNode.children
-            for child in children:
-                coalescentProcess[child] = []
-                self.__cutTreeRecurse(coalescentProcess, child, unlinkDistance)
-        return coalescentProcess
-
-    def jointCoalescent(self, copiedHaplotypeTree, unlinkedSpecies):
+                    branchLength += e['distance'] - distanceAboveSpeciesNode
+        if self.speciesTree.getNodeById(nodeId).parent:            
+            parentId = self.speciesTree.getNodeById(nodeId).parent
+            self.__coalescentJoiningRecurse(nodeId=parentId, event=event, fullCoalescentProcess=fullCoalescentProcess, 
+                selectedCoalescentProcess=selectedCoalescentProcess, distanceAboveSpeciesNode=0, branchLength=branchLength)
+        else:
+            # no coalescent
+            return None, None, None
         
-        return
 
-    def dtSubtree(self, coalescentProcess, events, haplotypeTree, level):
+    def dtSubtree(self, events, haplotypeTree, level):
         """
         1. simulate all the events on the haplotype tree 
         2. construct the corresponding new locus tree
@@ -575,65 +552,105 @@ class HaplotypeTree:
         4. simulate all the events on the haplotype tree 
         5. recurse
         """
+        selectedCoalescentProcess = self.coalescentProcess
+        fullCoalescentProcess = self.fullCoalescentProcess
         eventIndex = -1
         for event in events:
             if (event['type'] == 'duplication'):
-                eventIndex = eventIndex + 1
-                speciesId, distanceAboveSpeciesNode = self.__mapEventToSpeciesTree(
-                    geneId=event['geneNodeId'], eventHeight=event['eventHeight'], 
-                    speciesId=None)
-                newHaplotypeTree = self.__dtSubtreeRecurse(
-                    event=event, newLocusRootId=speciesId, 
+                speciesId = event['speciesNodeId']
+                distanceAboveSpeciesNode = event['distanceToSpeciesNode']
+
+                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral = self.__dtSubtreeRecurse(
+                    event=event, newLocusRootId=speciesId,
                     distanceAboveRoot=distanceAboveSpeciesNode, level=level)
 
-                for node in newHaplotypeTree.getSkbioTree().traverse():
-                    node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
-                
-                if self.verbose:
-                    print(newHaplotypeTree)
-                    print('new haplotype tree:')	
-                    print(newHaplotypeTree.getSkbioTree().ascii_art())	
-                    print('haplotype tree before:')	
-                    print(haplotypeTree.getSkbioTree().ascii_art())	
+                # newHaplotypeTree, chosenGeneName, geneNodeName, ancestral
+                if newHaplotypeTree:
+                    for node in newHaplotypeTree.getSkbioTree().traverse():
+                        node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                    
+                    if self.verbose:
+                        print(newHaplotypeTree)
+                        print('new haplotype tree:')	
+                        print(newHaplotypeTree.getSkbioTree().ascii_art())	
+                        print('haplotype tree before:')	
+                        print(haplotypeTree.getSkbioTree().ascii_art())	
+                    if ancestral:
+                        # fix
+                        # geneNodeName = event['geneNodeName']
+                        eventIndex = eventIndex + 1
+                        geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
+                        geneNodeParent = geneNode.parent
+                        # 1. create new node
+                        newNode = skbio.tree.TreeNode()
+                        newNode.name = 'd' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                        # 2. change length
+                        newHaplotypeTree.getSkbioTree().length = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
+                        newNode.length = 0 if not geneNodeParent else geneNode.length - event['distanceToGeneNode']
+                        geneNode.length = event['distanceToGeneNode']
+                        # 3. change children
+                        newNode.children = [geneNode, newHaplotypeTree.getSkbioTree()]
+                        if geneNodeParent:
+                            for i in range(len(geneNode.parent.children)):
+                                if geneNode.parent.children[i] == geneNode:
+                                    geneNode.parent.children[i] = newNode
+                                    break
+                        # 4. change parent
+                        geneNode.parent = newNode
+                        newHaplotypeTree.getSkbioTree().parent = newNode
 
-                geneNodeName = event['geneNodeName']
-                geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
-                geneNodeParent = geneNode.parent
-                # 1. create new node
-                newNode = skbio.tree.TreeNode()
-                newNode.name = 'd' + '_lv=' + str(level) + '_id=' + str(eventIndex)
-                # 2. change length
-                newHaplotypeTree.getSkbioTree().length = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
-                newNode.length = 0 if not geneNodeParent else geneNode.length - event['distanceToGeneNode']
-                geneNode.length = event['distanceToGeneNode']
-                # 3. change children
-                newNode.children = [geneNode, newHaplotypeTree.getSkbioTree()]
-                if geneNodeParent:
-                    for i in range(len(geneNode.parent.children)):
-                        if geneNode.parent.children[i] == geneNode:
-                            geneNode.parent.children[i] = newNode
-                            break
-                # 4. change parent
-                geneNode.parent = newNode
-                newHaplotypeTree.getSkbioTree().parent = newNode
+                        # check root
+                        if not geneNodeParent:
+                            haplotypeTree.setSkbioTree(newNode)
+                        else:
+                            newNode.parent = geneNodeParent
 
-                # check root
-                if not geneNodeParent:
-                    haplotypeTree.setSkbioTree(newNode)
-                else:
-                    newNode.parent = geneNodeParent
+                        if self.verbose:
+                            print('haplotype tree after:')	
+                            print(haplotypeTree.getSkbioTree().ascii_art())
+                    else:
+                        # non-ancestral
+                        geneNodeName, distanceAboveGeneNode, branchLength = self.coalescentJoining(
+                            event=event, fullCoalescentProcess=fullCoalescentProcess, 
+                            selectedCoalescentProcess=selectedCoalescentProcess)
+                        if geneNodeName:
+                            eventIndex = eventIndex + 1
+                            geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
+                            geneNodeParent = geneNode.parent
+                            # 1. create new node
+                            newNode = skbio.tree.TreeNode()
+                            newNode.name = 'd' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                            # 2. change length
+                            newHaplotypeTree.getSkbioTree().length = branchLength
+                            newNode.length = 0 if not geneNodeParent else geneNode.length - event['distanceToGeneNode']
+                            geneNode.length = event['distanceToGeneNode']
+                            # 3. change children
+                            newNode.children = [geneNode, newHaplotypeTree.getSkbioTree()]
+                            if geneNodeParent:
+                                for i in range(len(geneNode.parent.children)):
+                                    if geneNode.parent.children[i] == geneNode:
+                                        geneNode.parent.children[i] = newNode
+                                        break
+                            # 4. change parent
+                            geneNode.parent = newNode
+                            newHaplotypeTree.getSkbioTree().parent = newNode
 
-                if self.verbose:
-                    print('haplotype tree after:')	
-                    print(haplotypeTree.getSkbioTree().ascii_art())
+                            # check root
+                            if not geneNodeParent:
+                                haplotypeTree.setSkbioTree(newNode)
+                            else:
+                                newNode.parent = geneNodeParent
+
+                            if self.verbose:
+                                print('haplotype tree after:')	
+                                print(haplotypeTree.getSkbioTree().ascii_art())
 
             elif (event['type'] == 'transfer'):
-                eventIndex = eventIndex + 1
                 transferTargetId = event['targetSpeciesId']
-                targetHeight = self.speciesTree.getDistanceToLeaf(transferTargetId, 0)
+                targetHeight = self.speciesTree.getDistanceToLeaf(transferTargetId)
                 distanceAboveTarget = event['eventHeight'] - targetHeight
-                newHaplotypeTree = self.__dtSubtreeRecurse(
-                    event=event, newLocusRootId=transferTargetId, 
+                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral = self.__dtSubtreeRecurse(
+                    event=event, newLocusRootId=transferTargetId,
                     distanceAboveRoot=distanceAboveTarget, level=level)
                 
                 for node in newHaplotypeTree.getSkbioTree().traverse():
@@ -645,53 +662,51 @@ class HaplotypeTree:
                     print(newHaplotypeTree.getSkbioTree().ascii_art())	
                     print('haplotype tree before:')	
                     print(haplotypeTree.getSkbioTree().ascii_art())	
-                
-                geneNodeName = event['geneNodeName']
-                geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
-                geneNodeParent = geneNode.parent
-                # 1. create new node
-                newNode = skbio.tree.TreeNode()
-                newNode.name = 't' + '_lv=' + str(level) + '_id=' + str(eventIndex)
-                # 2. change length
-                newHaplotypeTree.getSkbioTree().length = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
-                newNode.length = 0 if not geneNodeParent else geneNode.length - event['distanceToGeneNode']
-                geneNode.length = event['distanceToGeneNode']
-                # 3. change children
-                newNode.children = [geneNode, newHaplotypeTree.getSkbioTree()]
-                if geneNodeParent:
-                    for i in range(len(geneNode.parent.children)):
-                        if geneNode.parent.children[i] == geneNode:
-                            geneNode.parent.children[i] = newNode
-                            break
-                # 4. change parent
-                geneNode.parent = newNode
-                newHaplotypeTree.getSkbioTree().parent = newNode
-                
-                # check root
-                if not geneNodeParent:
-                    haplotypeTree.setSkbioTree(newNode)
-                else:
-                    newNode.parent = geneNodeParent
 
-                if self.verbose:
-                    print('haplotype tree after:')	
-                    print(haplotypeTree.getSkbioTree().ascii_art())
+                # find gene node using coal with recom
+                geneNodeName, distanceAboveGeneNode, branchLength = self.coalescentJoining(
+                    event=event, fullCoalescentProcess=fullCoalescentProcess, 
+                    selectedCoalescentProcess=selectedCoalescentProcess)
+                if geneNodeName:
+                    eventIndex = eventIndex + 1
+                    geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
+                    geneNodeParent = geneNode.parent
+                    # 1. create new node
+                    newNode = skbio.tree.TreeNode()
+                    newNode.name = 't' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                    # 2. change length
+                    newHaplotypeTree.getSkbioTree().length = branchLength
+                    newNode.length = 0 if not geneNodeParent else geneNode.length - event['distanceToGeneNode']
+                    geneNode.length = event['distanceToGeneNode']
+                    # 3. change children
+                    newNode.children = [geneNode, newHaplotypeTree.getSkbioTree()]
+                    if geneNodeParent:
+                        for i in range(len(geneNode.parent.children)):
+                            if geneNode.parent.children[i] == geneNode:
+                                geneNode.parent.children[i] = newNode
+                                break
+                    # 4. change parent
+                    geneNode.parent = newNode
+                    newHaplotypeTree.getSkbioTree().parent = newNode
+
+                    # check root
+                    if not geneNodeParent:
+                        haplotypeTree.setSkbioTree(newNode)
+                    else:
+                        newNode.parent = geneNodeParent
+
+                    if self.verbose:
+                        print('haplotype tree after:')	
+                        print(haplotypeTree.getSkbioTree().ascii_art())
 
             elif (event['type'] == 'loss'):
                 geneNodeName = event['geneNodeName']
                 geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
                 geneNode.name = geneNode.name + '_loss'
-
-                # cut tree bug here...
-                # do not cut it for now, lable the loss points and delete all of them all at once when everything done
-                # haplotypeSkbioTree = haplotypeTree.getSkbioTree()
-                # haplotypeSkbioTree.remove_deleted(
-                #     lambda x: x.name == event['geneNodeName'])
-                # haplotypeSkbioTree.prune()
-
         return haplotypeTree
 
     def __dtSubtreeRecurse(self, event, newLocusRootId, distanceAboveRoot, level):
+        coalescentProcess = self.fullCoalescentProcess
         if (event['type'] == 'duplication' or event['type'] == 'transfer'): 
             # for transfer nodeId = target_id
             speciesSkbioTree = self.speciesTree.getSkbioTree()
@@ -705,20 +720,37 @@ class HaplotypeTree:
             newLocusTree.initialize(nodes=newLocusTreeNodes, skbioTree=newLocusSkbioTree)
             # print('newLocusTree', newLocusTree)	
             newLocusTree.coalescentRate = self.speciesTree.coalescentRate
+            unlinked = event['unlinked']
+            fullCoalescentProcess = None
+            selectedCoalescentProcess = None
+            chosenGeneName = None
+            geneNodeName = None
+            if unlinked:
+                ancestral = False
+                if self.hemiplasy == 1:
+                    fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName = \
+                        newLocusTree.incompleteCoalescent(distanceAboveRoot)
+                elif self.hemiplasy == 0:
+                    selectedCoalescentProcess = \
+                        newLocusTree.boundedCoalescent(distanceAboveRoot)
+                    fullCoalescentProcess = selectedCoalescentProcess
+            else:
+                fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName, geneNodeName, ancestral = \
+                    newLocusTree.coalescentWithRecombination(
+                    copiedHaplotypeTree=coalescentProcess, 
+                    copiedRootGene=self.getRoot().name,
+                    distanceAboveRoot=distanceAboveRoot)
+                if not selectedCoalescentProcess:
+                    return None, None, None, ancestral
 
-            locusTreeCoalescentProcess = None
-            if self.hemiplasy == 1:
-                locusTreeCoalescentProcess, chosenGeneName = \
-                    newLocusTree.incompleteCoalescent(distanceAboveRoot)
-            elif self.hemiplasy == 0:
-                locusTreeCoalescentProcess = \
-                    newLocusTree.boundedCoalescent(distanceAboveRoot)
 
             newHaplotypeTree = HaplotypeTree(
                 randomState=self.randomState, speciesTree=self.speciesTree)
             newHaplotypeTree.initialize(
                 locusTree=newLocusTree, 
-                coalescentProcess=locusTreeCoalescentProcess, rename=False)
+                coalescentProcess=selectedCoalescentProcess, 
+                fullCoalescentProcess=fullCoalescentProcess,
+                rename=False)
             newHaplotypeTree.eventRates = self.eventRates
 
             rootLength = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
@@ -733,17 +765,91 @@ class HaplotypeTree:
                 randomState=self.randomState, speciesTree=self.speciesTree)
             coalescentTree.initialize(
                 locusTree=newLocusTree, 
-                coalescentProcess=coalescentTreeProcess, rename=False)
+                coalescentProcess=coalescentTreeProcess, 
+                fullCoalescentProcess=coalescentTreeProcess,
+                rename=False)
             coalescentTree.eventRates = self.eventRates
-            rootLength = event['eventHeight'] - coalescentTree.getTreeHeight()
+            rootLength = max(0, event['eventHeight'] - coalescentTree.getTreeHeight())
+            threshold = event['eventHeight']
             newCoalescentTreeEvents = coalescentTree.dtProcess(
-                event=event, distanceAboveRoot=rootLength)
+                distanceAboveRoot=rootLength, threshold=threshold, event=event)
 
             newEvents = newHaplotypeTreeEvents + newCoalescentTreeEvents
             newEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
 
-            newHaplotypeTree.dtSubtree(
-                coalescentProcess=locusTreeCoalescentProcess, 
-                events=newEvents, haplotypeTree=newHaplotypeTree, 
+            newHaplotypeTree.dtSubtree(events=newEvents, haplotypeTree=newHaplotypeTree, 
                 level=level + 1)
-            return newHaplotypeTree
+            return newHaplotypeTree, chosenGeneName, geneNodeName, ancestral
+
+    '''
+    unfinished functions
+    '''
+    def find_ils(self, path):
+        for i in range(len(self.nodes)):
+            # searching in backward order
+            j = len(self.nodes)-1-i 
+            geneNode = self.getNodeById(j)
+            clades = geneNode.name.split('*')[:-1]
+            clades = [int(j) for j in clades]
+            geneNode.clades = clades
+
+            if (geneNode.children and not geneNode.splits):
+                for i in range(len(geneNode.children)):
+                    geneChildName = self.getNodeById(geneNode.children[i]).name 
+                    childClades = geneChildName.split('*')[:-1]
+                    childClades = [int(j) for j in childClades]
+                    geneNode.splits.append(childClades)
+
+            foundSpeciesNode = False
+            # find lowest possibile species node, then trace back
+            for speciesNode in self.speciesTree.getNodes: 
+                if (set(node.clade).issuperset(set(gene_clade))):
+                    foundSpeciesNode = True
+                    species_node = node
+                    break
+            if not foundSpeciesNode:
+                continue
+            species_clade = species_node.clade
+            species_splits = species_node.clade_split
+            find_ils = False
+            if (gene_splits):
+                gene_split_0 = set(gene_splits[0])
+                gene_split_1 = set(gene_splits[1])
+                for species_split in species_splits:
+                    if (set(species_split).intersection(gene_split_0) and set(species_split).intersection(gene_split_1)):
+                        find_ils = True
+                        break
+            if (find_ils):
+                species_id = self.map_gene_id_to_species_id(j)
+                index = Utility.increment()
+                self.full_events.append({
+                    'type': 'ils',
+                    'gene_node_id': j, 
+                    'gene_node_name': node.name, 
+                    'species_node_id': species_id,
+                    'index': index
+                })
+                # Debug.event_count['I'] += 1
+                file_name = 'ils_' + str(index)
+                f = open(os.path.join(path, file_name), 'w')
+                f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
+                f.close()
+                # print('find ils at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
+                #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
+            else: 
+                if (gene_splits):
+                    species_id = self.map_gene_id_to_species_id(j)
+                    index = Utility.increment()
+                    self.full_events.append({
+                        'type': 's',
+                        'gene_node_id': j, 
+                        'gene_node_name': node.name, 
+                        'species_node_id': species_id,
+                        'index': index
+                    })
+                    file_name = 's_' + str(index)
+                    f = open(os.path.join(path, file_name), 'w')
+                    f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
+                    f.close()
+                    # print('find speciation at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
+                    #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))

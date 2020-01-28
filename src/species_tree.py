@@ -70,7 +70,7 @@ class SpeciesTree:
     def getTreeHeight(self):
         return self.__treeTable.treeHeight
 
-    def getDistanceToLeaf(self, nodeId, branchDistance):
+    def getDistanceToLeaf(self, nodeId, branchDistance=0):
         return self.__treeTable.distanceToLeaf(nodeId, branchDistance)
 
     def initialize(self, path):
@@ -144,19 +144,19 @@ class SpeciesTree:
                     # to genes comming out of the branch
                     if (len(cladeSet[children[0]]) != 0 
                         and len(cladeSet[children[1]]) != 0):
-                        self.__coalescentRecurse(
-                            nodeId=children[0], 
-                            branchLength=self.getNodeById(
-                                children[0]).distanceToParent,
-                            cladeSet=cladeSet, 
-                            coalescentProcess=coalescentProcess)
+                        cladeSet[children[0]] = self.__coalescentRecurse(
+                                                nodeId=children[0], 
+                                                branchLength=self.getNodeById(
+                                                    children[0]).distanceToParent,
+                                                cladeSet=cladeSet, 
+                                                coalescentProcess=coalescentProcess)
                         labelled[children[0]] = True
-                        self.__coalescentRecurse(
-                            nodeId=children[1], 
-                            branchLength=self.getNodeById(
-                                children[1]).distanceToParent,
-                            cladeSet=cladeSet, 
-                            coalescentProcess=coalescentProcess)  
+                        cladeSet[children[1]] = self.__coalescentRecurse(
+                                                nodeId=children[1],
+                                                branchLength=self.getNodeById(
+                                                    children[1]).distanceToParent,
+                                                cladeSet=cladeSet, 
+                                                coalescentProcess=coalescentProcess)  
                         labelled[children[1]] = True
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
@@ -289,6 +289,17 @@ class SpeciesTree:
         splited = sorted([int(e) for e in splited])
         return [str(e) + '*' for e in splited]
 
+    def __checkSorted(self, couple):
+        """
+        1#4# + 2#3# -> 1#4#2#3# -> 1#2#3#4#
+        """
+        string = ''
+        for e in couple:
+            string += e
+        splited = string.split('#')[:-1]
+        splited = sorted([int(e) for e in splited])
+        return [str(e) + '#' for e in splited]
+
     def getTimeSequences(self, coalescentProcess):
         """
         backward-in-time coalescent process modified data structure 
@@ -345,55 +356,6 @@ class SpeciesTree:
         implementation in locus_tree.py
         """
         pass
-
-    def coalescentJoining(self, mainCoalescentProcess, 
-            mainTimeSequence, nodeId, eventHeight):
-        # assume coal process non-trivial
-        # subRootClade = 1*2*3*
-        # assume existence of coal event at nodeId
-        mainCladeSets = mainCoalescentProcess[nodeId]
-        distanceToCoalescent = self.getDistanceToLeaf(nodeId=nodeId, branchDistance=0)
-        nextCoalescentClades = None
-        nextCoalescentHeights = None    
-        isFound = False     
-        # find in current branch           
-        for i in range(len(mainCladeSets)):
-            cladeSet = mainCladeSets[i]
-            distanceToCoalescent = distanceToCoalescent + cladeSet['distance']
-            if distanceToCoalescent >  eventHeight:
-                nextCoalescentClades = [cladeSet['fromSet'] for cladeSet in mainCladeSets[i:]]
-                nextCoalescentHeights = [cladeSet['distance'] for cladeSet in mainCladeSets[i:]]
-                nextCoalescentHeights[0] = distanceToCoalescent - eventHeight
-                break
-            i = i + 1
-        isFound = self.withinBranchRecurse(nextCoalescentClades, nextCoalescentHeights)
-        # find in parent branch
-        if not isFound:
-            if nodeId == self.getRoot().id:
-                print('above root')
-            else:
-                parentId = self.getNodeById(nodeId).parent
-                self.coalescentJoining(mainCoalescentProcess, 
-                mainTimeSequence, parentId, eventHeight)
-
-
-    def withinBranchRecurse(self, nextCoalescentClades, nextCoalescentHeights):
-        if not nextCoalescentClades:
-            return False
-        else:
-            mainCladeSet = nextCoalescentClades[0]
-            fakeDistance = min(self.randomState.exponential(
-                    scale=1.0 / coalescentRate, size=len(mainCladeSet)))
-            if fakeDistance < nextCoalescentHeights[0]:
-                print('find it')
-                return True
-            else:
-                nextCoalescentClades.pop(0)
-                nextCoalescentHeights.pop(0)
-                self.withinBranchRecurse(nextCoalescentClades, nextCoalescentHeights)
-             
-    # def acrossBranchRecurse(self, nodeId, mainCoalescentProcess):
-    #     mainCladeSets = mainCoalescentProcess[nodeId]
 
 
 
