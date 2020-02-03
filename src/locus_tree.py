@@ -1,5 +1,6 @@
 from .species_tree import *
 from .tree_table import *
+import pprint
 
 class LocusTree(SpeciesTree):
 
@@ -133,11 +134,13 @@ class LocusTree(SpeciesTree):
             fromSets[node.id] = \
                 [str(node.id) + '*' + str(node.id) + '#'] if not node.children else []
         recomSets = fromSets
+
         
         while True:
             for leaf in oldLeaves:
                 # coalescent finished
                 if leaf == root.id:
+                    print('root')
                     cladeSetIntoRoot, _, _ = self.__speciesBranchRecurse(nodeId=root.id, 
                         branchLength=self.getNodeById(root.id).distanceToParent, 
                         coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
@@ -157,6 +160,8 @@ class LocusTree(SpeciesTree):
                     # to genes comming out of the branch
                     if (len(fromSets[children[0]]) != 0 
                         and len(fromSets[children[1]]) != 0):
+                        storedFromSet0 = fromSets[children[0]]
+                        storedFromSet1 = fromSets[children[1]]
                         toSets[children[0]], coalSets[children[0]], recomSets[children[0]] = \
                             self.__speciesBranchRecurse(nodeId=children[0], 
                             branchLength=self.getNodeById(children[0]).distanceToParent, 
@@ -169,15 +174,40 @@ class LocusTree(SpeciesTree):
                             coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
                             fromSet=fromSets[children[1]], coalSet=coalSets[children[1]], recomSet=coalSets[children[1]]) 
                         labelled[children[1]] = True
+                        
+                        pprint.pprint(coalescentProcess)
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
-                        fromSets[parent] = list(set().union(
-                            toSets[children[0]], toSets[children[1]]))
-                        recomSets[parent] = list(set().union(
-                            recomSets[children[0]], recomSets[children[1]]))
-                        coalSets[parent] = list(set().union(
-                            coalSets[children[0]], coalSets[children[1]]))
+                        fromSets[children[0]] = storedFromSet0
+                        fromSets[children[1]] = storedFromSet1
+                        print('toSet0',toSets[children[0]])
+                        print('toSet1',toSets[children[1]])
+                        if str(toSets[children[1]]) == '[[]]':
+                            print('to empty')
+                            fromSets[parent] = toSets[children[0]]
+                        elif str(toSets[children[0]]) == '[[]]':
+                            fromSets[parent] = toSets[children[1]]
+                        else:
+                            fromSets[parent] = toSets[children[0]] + toSets[children[1]]
+                        print('fromsetparent=',fromSets)
+
+                        if str(recomSets[children[1]]) == '[[]]':
+                            print('recom empty')
+                            recomSets[parent] = recomSets[children[0]]
+                        elif str(recomSets[children[0]]) == '[[]]':
+                            recomSets[parent] = recomSets[children[1]]
+                        else:
+                            recomSets[parent] = recomSets[children[0]] + recomSets[children[1]]
+
+                        if str(coalSets[children[1]]) == '[[]]':
+                            print('coal empty')
+                            coalSets[parent] = coalSets[children[0]]
+                        elif str(recomSets[children[0]]) == '[[]]':
+                            coalSets[parent] = coalSets[children[1]]
+                        else:
+                            coalSets[parent] = coalSets[children[0]] + coalSets[children[1]]  
                         
+
                         # if the parent is in newLeaves, do not add in any children of the parent
                         if len(newLeaves) > 0:
                             newLeaves = [e for e in newLeaves if e !=
@@ -186,7 +216,6 @@ class LocusTree(SpeciesTree):
                     else:
                         # updating leaves set
                         newLeaves.append(leaf)
-
             # coalesecent finished
             if leaf == root.id:
                 break
@@ -200,12 +229,13 @@ class LocusTree(SpeciesTree):
             # re-initialization for the next recursion
             # oldLeaves <- newLeaves
             # label <- false
+            print('old',oldLeaves)
+            print('new',tempNewLeaves)
             oldLeaves = tempNewLeaves.copy()
             newLeaves = []
             labelled = {}
             for node in nodes:
                 labelled[node.id] = False
-
 
         ancestralClades = []
         nonAncestralClades = []
@@ -216,6 +246,7 @@ class LocusTree(SpeciesTree):
                 elif copiedRootGene in clade:
                     ancestralClades.append(clade)
         fullClades = ancestralClades + nonAncestralClades
+        print('cladeSetIntoRoot', cladeSetIntoRoot)
         chosenGeneName = np.random.choice(cladeSetIntoRoot)
         if chosenGeneName not in fullClades:
             # discad the unobservable ancestral duplication
@@ -251,6 +282,7 @@ class LocusTree(SpeciesTree):
         else:
             recomDistance = 1000
         if coalDistance < min(recomDistance, distance):
+            print('coal')
             chosenGene = np.random.choice(coalSet)
             coalSet = coalSet.remove(chosenGene)
             targets = fromSet
@@ -277,6 +309,7 @@ class LocusTree(SpeciesTree):
                 initial=False)
 
         elif recomDistance < min(coalDistance, distance):
+            print('recom')
             chosenGene = np.random.choice(recomSet)
             recomSet = recomSet.remove(chosenGene)
             starString, checkString, mergedString = self.__getBipartition(chosenGene)
@@ -298,6 +331,7 @@ class LocusTree(SpeciesTree):
                 copiedProcess=copiedProcess,
                 initial=False)
         else:
+            print('none')
             if copiedProcess['toSet']:
                 [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
                 for e in fromSet:
@@ -308,11 +342,14 @@ class LocusTree(SpeciesTree):
                     else:
                         continue
                 couple = ''.join([coupleL, coupleR])
+                print('couple=============',couple)
                 starString, checkString, mergedString = self.__getBipartition(couple)
+                print('string=============',starString, checkString, mergedString)
                 toSet = fromSet
                 toSet.remove(coupleL)
                 toSet.remove(coupleR)
                 toSet.append(mergedString)
+                print('toset============',toSet)
                 if initial:
                     distance += distanceToAdd
                 coalescentProcess[nodeId].append({
@@ -329,6 +366,7 @@ class LocusTree(SpeciesTree):
                     'distance': distance
                 })
                 distanceToAdd += distance
+            print('gene recurse')
         return toSet, coalSet, recomSet, distanceToAdd
 
     def __starSorted(self, couple):
@@ -342,21 +380,32 @@ class LocusTree(SpeciesTree):
         splited = sorted([int(e) for e in splited])
         return [str(e) + '*' for e in splited]
 
+    def __checkSorted(self, couple):
+        """
+        1#4# + 2#3# -> 1#4#2#3# -> 1#2#3#4#
+        """
+        string = ''
+        for e in couple:
+            string += e
+        splited = string.split('#')[:-1]
+        splited = sorted([int(e) for e in splited])
+        return [str(e) + '#' for e in splited]
+
     def __getBipartition(self, name):
-        starString=[]
-        checkString=[]
-        tempString=[]
+        starString=''
+        checkString=''
+        tempString=''
         for i in range(len(name)):
             if name[i] == '*':
-                starString += tempString
-                tempString=[]
+                starString += tempString+'*'
+                tempString=''
             elif name[i] == '#':
-                checkString += tempString
-                tempString=[]
+                checkString += tempString+'#'
+                tempString=''
             else:
                 tempString += name[i]
-        starString = self.__starSorted(starString)
-        checkString = self.__checkSorted(checkString)
+        starString = ''.join(self.__starSorted(starString))
+        checkString = ''.join(self.__checkSorted(checkString))
         mergedString = starString + checkString
         return starString, checkString, mergedString
 
@@ -373,7 +422,7 @@ class LocusTree(SpeciesTree):
         copiedHaplotypeTree, fromSet, coalSet, recomSet):
         withinBranchProcess = copiedHaplotypeTree[nodeId]
         distanceToAdd = 0
-        toSet = []
+        # toSet = []
         for i in range(len(withinBranchProcess)):
             copiedProcess = withinBranchProcess[i]
             distance = withinBranchProcess[i]['distance']
@@ -383,6 +432,7 @@ class LocusTree(SpeciesTree):
                                                     coalSet=coalSet, recomSet=recomSet, 
                                                     copiedProcess=copiedProcess)
             fromSet = toSet
+            print('species recurse')
         return toSet, coalSet, recomSet
 
     def __getCoalescentRateInAncestralBranch(self, cladeSet):

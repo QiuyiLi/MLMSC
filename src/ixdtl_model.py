@@ -85,7 +85,6 @@ class IxDTLModel:
             haplotypeTree=self.haplotypeTree, level=0)
         print('======6')
         geneSkbioTree = geneTree.getSkbioTree()
-        print('======7')
         # cut the tree 
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
