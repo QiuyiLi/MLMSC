@@ -61,7 +61,9 @@ class IxDTLModel:
         coalescentTreeProcess, cladeSetIntoRoot = self.speciesTree.coalescent(
                 distanceAboveRoot=float('inf'))
         coalescentTree = HaplotypeTree(
-            randomState=self.haplotypeTree.randomState, speciesTree=self.haplotypeTree.speciesTree)
+            randomState=self.randomState, 
+            speciesTree=self.speciesTree, 
+            locusTree=self.speciesTree)
         coalescentTree.initialize(
             locusTree=self.speciesTree, 
             coalescentProcess=coalescentTreeProcess, 
@@ -71,19 +73,17 @@ class IxDTLModel:
         coalescentTreeEvents = coalescentTree.dtProcess(
             distanceAboveRoot=0, threshold=1000, event=None)
 
+        # events = self.haplotypeTree.dlProcess(distanceAboveRoot=0) + coalescentTreeEvents
+        # events.sort(reverse=True, key=lambda x: x['eventHeight'])
 
+        coalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
+        events = coalescentTreeEvents + self.haplotypeTree.dlProcess(distanceAboveRoot=0)
 
-
-
-
-        events = self.haplotypeTree.dlProcess(distanceAboveRoot=0) + coalescentTreeEvents
-        
-        events.sort(reverse=True, key=lambda x: x['eventHeight'])
         # run dt subtree
-        print('======5')
+        # print('======5')
         geneTree = self.haplotypeTree.dtSubtree(events=events, 
             haplotypeTree=self.haplotypeTree, level=0)
-        print('======6')
+        # print('======6')
         geneSkbioTree = geneTree.getSkbioTree()
         # cut the tree 
         geneTreeTruncated = geneTree
@@ -178,7 +178,7 @@ class IxDTLModel:
             
     def constructOriginalHaplotypeTree(self):
         self.__haplotypeTree = HaplotypeTree(
-            randomState=self.randomState, speciesTree=self.speciesTree)
+            randomState=self.randomState, speciesTree=self.speciesTree, locusTree=self.speciesTree)
 
         self.haplotypeTree.initialize(locusTree=self.speciesTree)
 

@@ -185,6 +185,8 @@ class SpeciesTree:
             # re-initialization for the next recursion
             # oldLeaves <- newLeaves
             # label <- false
+            # print('old',oldLeaves)
+            # print('new',tempNewLeaves)
             oldLeaves = tempNewLeaves.copy()
             newLeaves = []
             labelled = {}
@@ -312,11 +314,25 @@ class SpeciesTree:
         }
         """
         timeSequences = {}
+        geneNodeName = None
         for leaf in self.getLeaves():
             timeSequences[leaf.id] = self.__findAncestors(
                 leafName=str(leaf.id) + '*', 
                 coalescentProcess=coalescentProcess)
-        return timeSequences
+        emptySeq = True
+        for leaf in self.getLeaves():
+            if timeSequences[leaf.id]:
+                emptySeq = False
+        if emptySeq:
+            timeSequences = {}
+            sequence = []
+            for speciesNodeId, mergingSets in coalescentProcess.items():
+                for mergingSet in mergingSets:
+                    if mergingSet['fromSet']:
+                        geneNodeName = mergingSet['fromSet'][0]
+                        break
+                    break
+        return timeSequences, geneNodeName
 
     def __findAncestors(self, leafName, coalescentProcess):
         """
