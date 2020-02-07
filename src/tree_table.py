@@ -139,7 +139,10 @@ class TreeTable:
 
     @property
     def treeHeight(self):
-        return self.__treeHeight
+        treeHeight = self.__treeHeight
+        if treeHeight < 0:
+            treeHeight = 0
+        return treeHeight
 
     def getEntryById(self, id):
         return self.__tableDictId[id]
@@ -270,4 +273,8 @@ class TreeTable:
         to the bottom of the tree needed when assigning ids to the 
         coalescent tree
         """
-        return branchDistance + (self.treeHeight - self.__distanceToRoot(nodeId))
+        distance = branchDistance + (self.treeHeight - self.__distanceToRoot(nodeId))
+        if distance < 0:
+            distance = 0
+
+        return distance

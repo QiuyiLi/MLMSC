@@ -66,7 +66,7 @@ def readCommand(argv):
         help=default(
             'the parameters of the gamma distribution for loss event, '
             'e.g., "shape=val1,scale=val2", or "const=val" if constant applies'),
-        default='const=2')
+        default='const=0')
 
     parser.add_option(
         '-h', '--hemiplasy', type='int', dest='hemiplasy',

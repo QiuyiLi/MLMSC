@@ -434,11 +434,12 @@ class LocusTree(SpeciesTree):
             for i in range(len(withinBranchProcess)):
                 copiedProcess = withinBranchProcess[i]
                 distance = withinBranchProcess[i]['distance']
-                toSet, coalSet, recomSet, distanceToAdd = self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
-                                                        distanceToAdd=distanceToAdd, fromSet=tempFromSet,
-                                                        coalescentProcess=coalescentProcess,
-                                                        coalSet=coalSet, recomSet=recomSet, 
-                                                        copiedProcess=copiedProcess)
+                toSet, coalSet, recomSet, distanceToAdd = \
+                    self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
+                    distanceToAdd=distanceToAdd, fromSet=tempFromSet,
+                    coalescentProcess=coalescentProcess,
+                    coalSet=coalSet, recomSet=recomSet, 
+                    copiedProcess=copiedProcess)
                 tempFromSet = toSet.copy()
                 print('species recurse')
 

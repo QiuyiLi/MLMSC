@@ -80,10 +80,8 @@ class IxDTLModel:
         events = coalescentTreeEvents + self.haplotypeTree.dlProcess(distanceAboveRoot=0)
 
         # run dt subtree
-        # print('======5')
         geneTree = self.haplotypeTree.dtSubtree(events=events, 
             haplotypeTree=self.haplotypeTree, level=0)
-        # print('======6')
         geneSkbioTree = geneTree.getSkbioTree()
         # cut the tree 
         geneTreeTruncated = geneTree
