@@ -497,17 +497,16 @@ class HaplotypeTree:
             nodeId=nodeId, event=event, fullCoalescentProcess=fullCoalescentProcess, 
             selectedCoalescentProcess=selectedCoalescentProcess,
             distanceAboveSpeciesNode=distanceAboveSpeciesNode, 
-            haplotypeTree=haplotypeTree, branchLength=0)
+            haplotypeTree=haplotypeTree, branchLength=0, passed=False)
 
         return geneNodeName, distanceAboveGeneNode, branchLength
 
-    def __coalescentJoiningRecurse(self, nodeId, event, fullCoalescentProcess, selectedCoalescentProcess, 
-        distanceAboveSpeciesNode, haplotypeTree, branchLength):
+    def __coalescentJoiningRecurse(self, nodeId, event, 
+        fullCoalescentProcess, selectedCoalescentProcess, 
+        distanceAboveSpeciesNode, haplotypeTree, branchLength, passed):
         coalescentRate = 1
         coalescentProcess = fullCoalescentProcess[nodeId]
         selectedProcess = selectedCoalescentProcess[nodeId]
-        passed = False
-
         for e in coalescentProcess:
             if not passed:
                 distanceAboveSpeciesNode = distanceAboveSpeciesNode - e['distance']
@@ -559,12 +558,13 @@ class HaplotypeTree:
             self.__coalescentJoiningRecurse(nodeId=parentId, event=event, 
                 fullCoalescentProcess=fullCoalescentProcess, 
                 selectedCoalescentProcess=selectedCoalescentProcess, 
-                distanceAboveSpeciesNode=0, haplotypeTree=haplotypeTree, 
-                branchLength=branchLength)
+                distanceAboveSpeciesNode=-1, haplotypeTree=haplotypeTree, 
+                branchLength=branchLength, passed = True)
         else:
             # no coalescent
             return None, None, None
         
+        # print('update============', coalescentProcess)
         return None, None, None
         
 
@@ -821,9 +821,9 @@ class HaplotypeTree:
                 level=level + 1)
             return newHaplotypeTree, chosenGeneName, geneNodeName, ancestral
 
-    '''
+    """
     unfinished functions
-    '''
+    """
     def find_ils(self, path):
         for i in range(len(self.nodes)):
             # searching in backward order
