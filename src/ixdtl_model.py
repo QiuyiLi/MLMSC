@@ -86,13 +86,32 @@ class IxDTLModel:
         # cut the tree 
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
-        for node in geneSkbioTreeTruncated.traverse():
-            if (node.children 
-                and 'loss' in node.children[0].name 
-                and 'loss' in node.children[1].name):
-                geneSkbioTreeTruncated.remove_deleted(
-                    lambda x: x.name == node.name)
-        geneSkbioTreeTruncated.prune()
+
+
+        # for node in geneSkbioTreeTruncated.traverse():
+        #     if (node.children 
+        #         and 'loss' in node.children[0].name 
+        #         and 'loss' in node.children[1].name):
+        #         node.name += '_loss'
+        #         geneSkbioTreeTruncated.remove_deleted(
+        #             lambda x: x.name == node.name)
+        # geneSkbioTreeTruncated.prune()
+        # for node in geneSkbioTreeTruncated.traverse():
+        #     if 'loss' in node.name:
+        #         geneSkbioTreeTruncated.remove_deleted(
+        #             lambda x: x.name == node.name)
+        # geneSkbioTreeTruncated.prune()
+        findIt = True
+        while findIt:
+            for node in geneSkbioTreeTruncated.traverse():
+                if (node.children 
+                    and 'loss' in node.children[0].name 
+                    and 'loss' in node.children[1].name):
+                    node.name += '_loss'
+                    findIt = True
+            findIt = False
+
+
         for node in geneSkbioTreeTruncated.traverse():
             if 'loss' in node.name:
                 geneSkbioTreeTruncated.remove_deleted(
@@ -102,7 +121,19 @@ class IxDTLModel:
         if not geneSkbioTreeTruncated:
                 print('Exception: ALL LOST')
                 return
-            
+
+
+        for node in geneSkbioTree.tips():	
+                print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
+        print('untruncated tree:')
+        print(geneSkbioTree.ascii_art())
+
+        print('------------------------------------------')
+        for node in geneSkbioTreeTruncated.tips():	
+                print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
+        print('truncated tree:')
+        print(geneSkbioTreeTruncated.ascii_art())
+
         if self.__parameters['verbose']:
             # visualizing the untruncated tree
             print('untruncated tree:')
