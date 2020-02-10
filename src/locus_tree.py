@@ -273,7 +273,7 @@ class LocusTree(SpeciesTree):
         else:
             coalDistance = float('inf')
         if len(recomSet) > 0:
-            print('!'*40)
+            # print('!'*40)
             recomDistance = min(self.randomState.exponential(scale=1.0/recombinationRate, size=len(recomSet)))
         else:
             recomDistance = float('inf')

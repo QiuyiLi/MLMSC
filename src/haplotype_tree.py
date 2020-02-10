@@ -370,7 +370,7 @@ class HaplotypeTree:
             # looking for more events on the same branch
             self.__dtProcessRecurse(skbioTreeNode=skbioTreeNode, 
                 distanceAboveRoot=distanceAboveRoot - distanceD, threshold=threshold, events=events)
-        elif (distanceT <= distanceD and distanceT < distanceAboveRoot):
+        elif (distanceT < distanceD and distanceT < distanceAboveRoot):
             eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceT
             speciesTreeHeight = self.speciesTree.getTreeHeight()
             if eventHeight < speciesTreeHeight:
@@ -474,18 +474,25 @@ class HaplotypeTree:
         selectedCoalescentProcess=haplotypeTree.coalescentProcess
         nodeId = event['speciesNodeId']
         distanceAboveSpeciesNode = event['distanceToSpeciesNode']
+        fullCoalescentTree = HaplotypeTree(
+            randomState=self.randomState, speciesTree=self.speciesTree, locusTree=self.speciesTree)
+        fullCoalescentTree.initialize(
+            locusTree=self.speciesTree, 
+            coalescentProcess=fullCoalescentProcess, 
+            fullCoalescentProcess=fullCoalescentProcess,
+            rename=False)
 
         geneNodeName, distanceAboveGeneNode, branchLength = self.__coalescentJoiningRecurse(
             nodeId=nodeId, event=event, fullCoalescentProcess=fullCoalescentProcess, 
             selectedCoalescentProcess=selectedCoalescentProcess,
             distanceAboveSpeciesNode=distanceAboveSpeciesNode, 
-            haplotypeTree=haplotypeTree, branchLength=0, passed=False)
+            haplotypeTree=haplotypeTree, fullCoalescentTree=fullCoalescentTree, branchLength=0, passed=False)
 
         return geneNodeName, distanceAboveGeneNode, branchLength
 
     def __coalescentJoiningRecurse(self, nodeId, event, 
         fullCoalescentProcess, selectedCoalescentProcess, 
-        distanceAboveSpeciesNode, haplotypeTree, branchLength, passed):
+        distanceAboveSpeciesNode, haplotypeTree, fullCoalescentTree, branchLength, passed):
         coalescentRate = 1
         lossRate = 0.2
         coalescentProcess = fullCoalescentProcess[nodeId]
@@ -501,10 +508,13 @@ class HaplotypeTree:
                     lossDistance = self.randomState.exponential(scale=1.0 / lossRate)
                     if coalDistance <  min(abs(distanceAboveSpeciesNode), lossDistance):
                         geneNodeName = np.random.choice(e['fromSet'])
-                        geneNodeId = haplotypeTree.getNodeByName(geneNodeName).id
+                        geneNodeId = fullCoalescentTree.getNodeByName(geneNodeName).id
                         branchLength += coalDistance
                         distanceAboveGeneNode = branchLength + event['eventHeight'] \
-                            - haplotypeTree.getDistanceToLeaf(geneNodeId)
+                            - fullCoalescentTree.getDistanceToLeaf(geneNodeId)
+                        if event['eventHeight'] - fullCoalescentTree.getDistanceToLeaf(geneNodeId) < 0:
+                            print('!'*40)
+                            print('wrong')
                         for element in selectedProcess:
                             if geneNodeName in element['fromSet']:
                                 return geneNodeName, distanceAboveGeneNode, branchLength
@@ -522,10 +532,10 @@ class HaplotypeTree:
                 lossDistance = self.randomState.exponential(scale=1.0 / lossRate)
                 if coalDistance <  min(e['distance'], lossDistance):
                     geneNodeName = np.random.choice(e['fromSet'])
-                    geneNodeId = haplotypeTree.getNodeByName(geneNodeName).id
+                    geneNodeId = fullCoalescentTree.getNodeByName(geneNodeName).id
                     branchLength += coalDistance
                     distanceAboveGeneNode = branchLength + event['eventHeight'] \
-                        - haplotypeTree.getDistanceToLeaf(geneNodeId)
+                        - fullCoalescentTree.getDistanceToLeaf(geneNodeId)
                     for element in selectedProcess:
                         if geneNodeName in element['fromSet']:
                             return geneNodeName, distanceAboveGeneNode, branchLength
@@ -545,6 +555,7 @@ class HaplotypeTree:
                 fullCoalescentProcess=fullCoalescentProcess, 
                 selectedCoalescentProcess=selectedCoalescentProcess, 
                 distanceAboveSpeciesNode=-1, haplotypeTree=haplotypeTree, 
+                fullCoalescentTree=fullCoalescentTree, 
                 branchLength=branchLength, passed = True)
         else:
             # no coalescent
@@ -629,11 +640,11 @@ class HaplotypeTree:
                         geneNodeName, distanceAboveGeneNode, branchLength = self.coalescentJoining(
                             event=event, haplotypeTree=haplotypeTree)
                         if geneNodeName:
-                            print('='*40)
-                            eventIndex = eventIndex + 1
-                            print('event' + str(eventIndex))
-                            print('level' + str(level))
-                            print(event)
+                            # print('='*40)
+                            # eventIndex = eventIndex + 1
+                            # print('event' + str(eventIndex))
+                            # print('level' + str(level))
+                            # print(event)
                             
                             for node in newHaplotypeTree.getSkbioTree().traverse():
                                 node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
@@ -743,7 +754,7 @@ class HaplotypeTree:
             # print('newLocusTree', newLocusTree)	
             newLocusTree.coalescentRate = self.speciesTree.coalescentRate
             # unlinked = event['unlinked']
-            unlinked = False
+            unlinked = True
             fullCoalescentProcess = None
             selectedCoalescentProcess = None
             chosenGeneName = None
