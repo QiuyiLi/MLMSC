@@ -640,8 +640,8 @@ class HaplotypeTree:
                         geneNodeName, distanceAboveGeneNode, branchLength = self.coalescentJoining(
                             event=event, haplotypeTree=haplotypeTree)
                         if geneNodeName:
+                            eventIndex = eventIndex + 1
                             # print('='*40)
-                            # eventIndex = eventIndex + 1
                             # print('event' + str(eventIndex))
                             # print('level' + str(level))
                             # print(event)
