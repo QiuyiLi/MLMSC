@@ -6,7 +6,6 @@ from .exception import *
 
 
 class IxDTLModel:
-
     # def __init__(self, seed=0):
     #     self.__randomState = np.random.RandomState(seed)
     def __init__(self):
@@ -37,16 +36,17 @@ class IxDTLModel:
     def randomState(self):
         return self.__randomState
 
-    def run(self, inputFile, coalescentArgs, duplicationArgs, transferArgs, 
-        lossArgs, hemiplasy, recombination, verbose):
+    def run(self, inputFile, coalescentArgs, recombinationArgs, duplicationArgs, transferArgs, 
+        lossArgs, unlinkArgs, hemiplasy, verbose):
         # set parameters
         self.setParameters(
             coalescent=coalescentArgs, 
+            recombination=recombinationArgs,
             duplication=duplicationArgs,
             transfer=transferArgs, 
             loss=lossArgs, 
+            unlink=unlinkArgs,
             hemiplasy=hemiplasy,
-            recombination=recombination,
             verbose=verbose)
 
         # read a species tree from input file
@@ -54,9 +54,6 @@ class IxDTLModel:
 
         # construct the original haplotype tree according to the species tree
         self.constructOriginalHaplotypeTree()
-        # pprint.pprint(self.haplotypeTree.coalescentProcess)
-        # return 0
-        # run dtl process
 
         coalescentTreeProcess, cladeSetIntoRoot = self.speciesTree.coalescent(
                 distanceAboveRoot=float('inf'))
@@ -70,37 +67,24 @@ class IxDTLModel:
             fullCoalescentProcess=coalescentTreeProcess,
             rename=False)
         coalescentTree.eventRates = self.haplotypeTree.eventRates
-        coalescentTreeEvents = coalescentTree.dtProcess(
-            distanceAboveRoot=0, threshold=1000, event=None)
+        coalescentTreeEvents = coalescentTree.DTprocess(
+            distanceAboveRoot=0, threshold=float('inf'), event=None)
 
-        # events = self.haplotypeTree.dlProcess(distanceAboveRoot=0) + coalescentTreeEvents
+        # events = self.haplotypeTree.Lprocess(distanceAboveRoot=0) + coalescentTreeEvents
         # events.sort(reverse=True, key=lambda x: x['eventHeight'])
 
         coalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
-        events = coalescentTreeEvents + self.haplotypeTree.dlProcess(distanceAboveRoot=0)
+        events = coalescentTreeEvents + self.haplotypeTree.Lprocess(distanceAboveRoot=0)
 
         # run dt subtree
-        geneTree = self.haplotypeTree.dtSubtree(events=events, 
+        geneTree = self.haplotypeTree.addNewLoci(events=events, 
             haplotypeTree=self.haplotypeTree, level=0)
         geneSkbioTree = geneTree.getSkbioTree()
         # cut the tree 
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
 
-
-        # for node in geneSkbioTreeTruncated.traverse():
-        #     if (node.children 
-        #         and 'loss' in node.children[0].name 
-        #         and 'loss' in node.children[1].name):
-        #         node.name += '_loss'
-        #         geneSkbioTreeTruncated.remove_deleted(
-        #             lambda x: x.name == node.name)
-        # geneSkbioTreeTruncated.prune()
-        # for node in geneSkbioTreeTruncated.traverse():
-        #     if 'loss' in node.name:
-        #         geneSkbioTreeTruncated.remove_deleted(
-        #             lambda x: x.name == node.name)
-        # geneSkbioTreeTruncated.prune()
+        # cut tree at losses
         findIt = True
         while findIt:
             for node in geneSkbioTreeTruncated.traverse():
@@ -110,47 +94,47 @@ class IxDTLModel:
                     node.name += '_loss'
                     findIt = True
             findIt = False
-
-
         for node in geneSkbioTreeTruncated.traverse():
             if 'loss' in node.name:
                 geneSkbioTreeTruncated.remove_deleted(
                     lambda x: x.name == node.name)
         geneSkbioTreeTruncated.prune()
-
         if not geneSkbioTreeTruncated:
                 print('Exception: ALL LOST')
                 return
 
-
-        for node in geneSkbioTree.tips():	
-                print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
-        print('untruncated tree:')
-        print(geneSkbioTree.ascii_art())
-
-        print('------------------------------------------')
-        for node in geneSkbioTreeTruncated.tips():	
-                print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
-        print('truncated tree:')
-        print(geneSkbioTreeTruncated.ascii_art())
-
+        # visualization
         if self.__parameters['verbose']:
             # visualizing the untruncated tree
             print('untruncated tree:')
             print(geneSkbioTree.ascii_art())	    
             # check time consistency 
+            print('distances from tips to root:')
             for node in geneSkbioTree.tips():	
                 print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
             # visualizing the truncated tree
             print('truncated tree:')
             print(geneSkbioTreeTruncated.ascii_art())
             # check time consistency
+            print('distances from tips to root:')
             for node in geneSkbioTreeTruncated.tips():	
                 print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
             print(geneSkbioTreeTruncated.ascii_art())
             # final gene table
+            print('gene tree table:')
             geneTreeTruncated.readFromSkbioTree(skbioTree=geneSkbioTreeTruncated, rename=False)
             print(geneTreeTruncated)
+        
+        else:
+            print('distances from tips to root:')
+            for node in geneSkbioTreeTruncated.tips():	
+                    print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
+            print('gene tree:')
+            print(geneSkbioTreeTruncated.ascii_art())
+            print('gene tree table:')
+            geneTreeTruncated.readFromSkbioTree(skbioTree=geneSkbioTreeTruncated, rename=False)
+            print(geneTreeTruncated)
+
                 
         # save newick to file
         f = open('./output/gene_tree_full.newick','w')
@@ -161,31 +145,35 @@ class IxDTLModel:
         f.write(str(geneSkbioTreeTruncated))
         f.close()
 
-    def setParameters(self, coalescent, duplication, transfer, loss, 
-        hemiplasy, recombination, verbose):
+    def setParameters(self, coalescent, recombination, duplication, transfer, loss, 
+        hemiplasy, unlink, verbose):
         if not coalescent:
             raise IxDTLError('missing coalescent parameter')
         self.__parameters['coalescent'] = coalescent
 
-        if not duplication:
+        if recombination is None:
+            raise IxDTLError('missing recombination parameter')
+        self.__parameters['recombination'] = recombination
+
+        if duplication is None:
             raise IxDTLError('missing duplication parameter')
         self.__parameters['duplication'] = duplication
 
-        if not transfer:
+        if transfer is None:
             raise IxDTLError('missing transfer parameter')
         self.__parameters['transfer'] = transfer
 
-        if not loss:
+        if loss is None:
             raise IxDTLError('missing loss parameter')
         self.__parameters['loss'] = loss
+
+        if unlink is None:
+            raise IxDTLError('missing unlink option')
+        self.__parameters['unlink'] = unlink
 
         if hemiplasy is None:
             raise IxDTLError('missing hemiplasy option')
         self.__parameters['hemiplasy'] = hemiplasy
-
-        if recombination is None:
-            raise IxDTLError('missing recombination option')
-        self.__parameters['recombination'] = recombination
 
         if verbose is None:
             raise IxDTLError('missing verbose option')
@@ -198,6 +186,9 @@ class IxDTLModel:
 
         self.speciesTree.setCoalescentRate(
             coalescentPrmt=self.__parameters['coalescent'])
+        
+        self.speciesTree.setRecombinationRate(
+            recombinationPrmt=self.__parameters['recombination'])
         # print(self.speciesTree)	
         if self.__parameters['verbose']:
             print('species tree:')	
@@ -220,11 +211,13 @@ class IxDTLModel:
         self.haplotypeTree.setEventRates(
             duplicationPrmt=self.parameters['duplication'],
             transferPrmt=self.parameters['transfer'],
-            lossPrmt=self.parameters['loss'])
-        self.haplotypeTree.setRecombination(
-            recombination=self.parameters['recombination'])
-        self.haplotypeTree.setHemiplasy(
+            lossPrmt=self.parameters['loss'],
+            unlinkProb=self.parameters['unlink'],
             hemiplasy=self.parameters['hemiplasy'])
+        # self.haplotypeTree.setUnlinkProb(
+        #     unlinkProb=self.parameters['unlink'])
+        # self.haplotypeTree.setHemiplasy(
+        #     hemiplasy=self.parameters['hemiplasy'])
         self.haplotypeTree.setVerbose(
             verbose=self.parameters['verbose'])
         

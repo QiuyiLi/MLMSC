@@ -6,16 +6,16 @@ def default(str):
     return str + ' [Default: %default]'
 
 
-def parseDistributionArgs(str):
-    if str == None:
-        return {}
-    pieces = str.split(',')
-    opts = {}
-    for p in pieces:
-        if '=' in p:
-            key, val = p.split('=')
-        opts[key] = float(val)
-    return opts
+# def parseDistributionArgs(str):
+#     if str == None:
+#         return {}
+#     pieces = str.split(',')
+#     opts = {}
+#     for p in pieces:
+#         if '=' in p:
+#             key, val = p.split('=')
+#         opts[key] = float(val)
+#     return opts
 
 
 def readCommand(argv):
@@ -41,41 +41,48 @@ def readCommand(argv):
         metavar='INPUT_FILE')
 
     parser.add_option(
-        '-c', '--coalescentArgs', dest='coalescentArgs',
+        '-c', '--coalescentArgs', type='float', dest='coalescentArgs',
         help=default(
-            'the parameters of the gamma distribution for coalescent, '
-            'e.g., "shape=val1,scale=val2", or "const=val" if constant applies'),
-        default='const=0.5')
+            'the unit rate of coalescent'
+            'e.g., "-c 0.5"'),
+        default=0.5)
 
     parser.add_option(
-        '-d', '--duplicationArgs', dest='duplicationArgs',
+        '-r', '--recombinationRate', type='float', dest='recombinationArgs',
         help=default(
-            'the parameters of the gamma distribution for duplication event, '
-            'e.g., "shape=val1,scale=val2", or "const=val" if constant applies'),
-        default='const=0.1')
+            'the unit rate of recombination'
+            'e.g., "-c 0.5"'),
+        default=0.5)
+
+    parser.add_option(
+        '-d', '--duplicationRate', type='float', dest='duplicationArgs',
+        help=default(
+            'the rate of occurence of duplications, '
+            'e.g., "-d 0.2"'),
+        default=0.1)
         
     parser.add_option(
-        '-t', '--transferArgs', dest='transferArgs',
+        '-t', '--transferRate', type='float', dest='transferArgs',
         help=default(
-            'the parameters of the gamma distribution for transfer event, '
-            'e.g., "shape=val1,scale=val2", or "const=val" if constant applies'),
-        default='const=0')
+            'the rate of occurence of transfers, '
+            'e.g., "-t 0.1"'),
+        default=0)
 
     parser.add_option(
-        '-l', '--lossArgs', dest='lossArgs',
+        '-l', '--lossRate', type='float', dest='lossArgs',
         help=default(
-            'the parameters of the gamma distribution for loss event, '
-            'e.g., "shape=val1,scale=val2", or "const=val" if constant applies'),
-        default='const=0')
+            'the rate of occurence of losses, '
+            'e.g., "-l 0.2"'),
+        default=0)
+
+    parser.add_option(
+        '-u', '--unlinkRate', type='float', dest='unlinkArgs',
+        help=default('probability for a duplication to be unlinked'),
+        default=1)
 
     parser.add_option(
         '-h', '--hemiplasy', type='int', dest='hemiplasy',
         help=default('hemiplasy option, 0 or 1'), metavar='HEMIPLASY',
-        default=1)
-
-    parser.add_option(
-        '-r', '--recombination', type='int', dest='recombination',
-        help=default('recombination option, 0 or 1'), metavar='RECOMBINATION',
         default=1)
 
     parser.add_option(
@@ -98,21 +105,17 @@ def readCommand(argv):
     args['inputFile'] = options.inputFile
 
     # distribution arguments
-    args['coalescentArgs'] = parseDistributionArgs(options.coalescentArgs)
-    args['duplicationArgs'] = parseDistributionArgs(options.duplicationArgs)
-    args['transferArgs'] = parseDistributionArgs(options.transferArgs)
-    args['lossArgs'] = parseDistributionArgs(options.lossArgs)
+    args['coalescentArgs'] = options.coalescentArgs
+    args['recombinationArgs'] = options.recombinationArgs
+    args['duplicationArgs'] = options.duplicationArgs
+    args['transferArgs'] = options.transferArgs
+    args['lossArgs'] = options.lossArgs
+    args['unlinkArgs'] = options.unlinkArgs
 
     # hemiplasy option
     if options.hemiplasy != 0 and options.hemiplasy != 1:
         parser.error('Invalid hemiplasy option: ' + str(options.hemiplasy))
     args['hemiplasy'] = True if options.hemiplasy == 1 else False
-
-    # recombination option
-    if options.recombination != 0 and options.recombination != 1:
-        parser.error('Invalid recombination option: ' +
-                     str(options.recombination))
-    args['recombination'] = True if options.recombination == 1 else False
 
     # verbose option
     if options.verbose != 0 and options.verbose != 1:

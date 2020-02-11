@@ -11,20 +11,20 @@ class TreeTableEntry:
         self.__distanceToParent = None
         self.__children = []
         self.__distanceToChildren = []
-        self.__clades = []
-        self.__splits = []
+        # self.__clades = []
+        # self.__splits = []
 
     def __repr__(self):
         return (f'<TreeTableEntry, id: {self.__id}, fakeId: {self.__fakeId}, name: {self.__name}, '
                 f'parent: {self.__parent}, distanceToParent: {self.__distanceToParent}, '
-                f'children: {self.__children}, distanceToChildren: {self.__distanceToChildren}, '
-                f'clades: {self.__clades}, splits: {self.__splits}>')
+                f'children: {self.__children}, distanceToChildren: {self.__distanceToChildren}>')
+                # f'clades: {self.__clades}, splits: {self.__splits}>')
 
     def __str__(self):
         return (f'<TreeTableEntry, id: {self.__id}, fakeId: {self.__fakeId}, name: {self.__name}, '
                 f'parent: {self.__parent}, distanceToParent: {self.__distanceToParent}, '
-                f'children: {self.__children}, distanceToChildren: {self.__distanceToChildren}, '
-                f'clades: {self.__clades}, splits: {self.__splits}>')
+                f'children: {self.__children}, distanceToChildren: {self.__distanceToChildren}>')
+                # f'clades: {self.__clades}, splits: {self.__splits}>')
 
     @property
     def id(self):
@@ -75,19 +75,19 @@ class TreeTableEntry:
     def distanceToChildren(self, distanceToChildren):
         self.__distanceToChildren = distanceToChildren
 
-    @property
-    def clades(self):
-        return self.__clades
-    @clades.setter
-    def clades(self, clades):
-        self.__clades = clades
+    # @property
+    # def clades(self):
+    #     return self.__clades
+    # @clades.setter
+    # def clades(self, clades):
+    #     self.__clades = clades
 
-    @property
-    def splits(self):
-        return self.__splits
-    @splits.setter
-    def splits(self, splits):
-        self.__splits = splits
+    # @property
+    # def splits(self):
+    #     return self.__splits
+    # @splits.setter
+    # def splits(self, splits):
+    #     self.__splits = splits
 
 class TreeTable:
     def __init__(self):

@@ -60,6 +60,9 @@ class LocusTree(SpeciesTree):
                         })
         return selectedCoalescentProcess
 
+    """
+    no need for this for the current version
+    """
     def __filteredCoalescentWithRecombinationProcess(self, coalescentProcess, cladeSetIntoRoot):
         filteredProcess = defaultdict(list)
         filteredClades = []
@@ -98,16 +101,9 @@ class LocusTree(SpeciesTree):
                 filteredClades.append(newClade)
         return filteredProcess, filteredClades
 
-    def __starReplace(self, string):
-        newString = ''
-        for e in string:
-            if e == '#':
-                newString += '*'
-            else:
-                newString += e
-        return newString
-    
-
+    """
+    no need for this for the current version
+    """
     def coalescentWithRecombination(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
         nodes = self.getNodes()
         root = self.getRoot()
@@ -184,7 +180,6 @@ class LocusTree(SpeciesTree):
                             coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
                             fromSet=fromSets[children[1]], coalSet=coalSets[children[1]], recomSet=recomSets[children[1]]) 
                         labelled[children[1]] = True
-                        print('==============================')
                         pprint.pprint(coalescentProcess)
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
@@ -193,8 +188,8 @@ class LocusTree(SpeciesTree):
 
                         # print('toSet0',toSets[children[0]])
                         # print('toSet1',toSets[children[1]])
-                        # fromSets[parent] = list(set().union(
-                        #     toSets[children[0]], toSets[children[1]]))
+                        fromSets[parent] = list(set().union(
+                            toSets[children[0]], toSets[children[1]]))
                         # print('fromset',fromSets[parent])
                         recomSets[parent] = list(set().union(
                             recomSets[children[0]], recomSets[children[1]]))
@@ -262,11 +257,17 @@ class LocusTree(SpeciesTree):
 
         return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral
 
+    """
+    no need for this for the current version
+    """
     def __geneBranchRecurse(self, nodeId, distance, distanceToAdd, fromSet, 
                 coalescentProcess, coalSet, recomSet, copiedProcess,
                 initial=True):
-        recombinationRate = 2
-        coalescentRate = 2
+        recombinationRate = self.recombinationRate
+        print('+'*40, recombinationRate)
+        coalescentRate = self.coalescentRate
+        print('+'*40, coalescentRate)
+
         if len(coalSet) > 0:
             coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate), 
                                     size=len(coalSet))
@@ -373,6 +374,19 @@ class LocusTree(SpeciesTree):
             # print('gene recurse')
         return toSet, coalSet, recomSet, distanceToAdd
 
+    """
+    no need for these for the current version
+    utility functions for coalescentWithRecombination
+    """
+    def __starReplace(self, string):
+        newString = ''
+        for e in string:
+            if e == '#':
+                newString += '*'
+            else:
+                newString += e
+        return newString
+
     def __starSorted(self, couple):
         """
         1*4* + 2*3* -> 1*4*2*3* -> 1*2*3*4*
@@ -422,6 +436,9 @@ class LocusTree(SpeciesTree):
                 continue
         return temp
 
+    """
+    no need for this for the current version
+    """
     def __speciesBranchRecurse(self, nodeId, branchLength, coalescentProcess, 
         copiedHaplotypeTree, fromSet, coalSet, recomSet):
         withinBranchProcess = copiedHaplotypeTree[nodeId]
@@ -446,11 +463,3 @@ class LocusTree(SpeciesTree):
                 print('species recurse')
 
         return toSet, coalSet, recomSet
-
-    def __getCoalescentRateInAncestralBranch(self, cladeSet):
-        indices = []
-        for clade in cladeSet:
-            splited = clade.split('*')[:-1]
-            for index in splited:
-                indices.append(int(index))
-        return mean(self.coalescentRate[indices])

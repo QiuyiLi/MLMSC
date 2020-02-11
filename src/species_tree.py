@@ -12,9 +12,9 @@ class SpeciesTree:
 
     def __init__(self, randomState):
         self.__randomState = randomState
-
         self.__treeTable = None
         self.__coalescentRate = None
+        self.__recombinationRate = None
 
     def __repr__(self):
         return str(self.__treeTable)
@@ -41,15 +41,23 @@ class SpeciesTree:
         self.__coalescentRate = coalescentRate
 
     def setCoalescentRate(self, coalescentPrmt):
-        if ('const' not in coalescentPrmt):
-            self.__coalescentRate = self.randomState.gamma(
-            shape=coalescentPrmt['shape'], scale=coalescentPrmt['scale'],
-            size=len(self.getLeaves()))
-        else:
-            self.__coalescentRate = np.repeat(coalescentPrmt['const'], 
-                len(self.getLeaves()))
+        self.__coalescentRate = coalescentPrmt
+    
+    @property
+    def recombinationRate(self):
+        return self.__recombinationRate
+    @recombinationRate.setter
+    def recombinationRate(self, recombinationRate):
+        self.__recombinationRate = recombinationRate
+
+    def setRecombinationRate(self, recombinationPrmt):
+        self.__recombinationRate = recombinationPrmt
 
     def getSkbioTree(self):
+        """
+        tree structure in package skbio
+        can be used to for newick format conversion
+        """
         return self.__treeTable.skbioTree
 
     def getNodeById(self, id):
@@ -76,20 +84,21 @@ class SpeciesTree:
     def initialize(self, path):
         self.__treeTable = TreeTable()
         self.__treeTable.createFromNewickFile(path)
-        for speciesNode in self.getNodes():
-            for i in range(len(speciesNode.name)):  
-                leafName = speciesNode.name[i]
-                leafId = self.getNodeByName(leafName).id
-                speciesNode.clades.append(leafId)
-            if (speciesNode.children and not speciesNode.splits):
-                for i in range(len(speciesNode.children)):
-                    childName = self.getNodeById(speciesNode.children[i]).name
-                    split = []
-                    for j in range(len(childName)):  
-                        leafName = childName[j]
-                        leafId = self.getNodeByName(leafName).id
-                        split.append(leafId)
-                    speciesNode.splits.append(split)
+
+        # for speciesNode in self.getNodes():
+        #     for i in range(len(speciesNode.name)):  
+        #         leafName = speciesNode.name[i]
+        #         leafId = self.getNodeByName(leafName).id
+        #         speciesNode.clades.append(leafId)
+        #     if (speciesNode.children and not speciesNode.splits):
+        #         for i in range(len(speciesNode.children)):
+        #             childName = self.getNodeById(speciesNode.children[i]).name
+        #             split = []
+        #             for j in range(len(childName)):  
+        #                 leafName = childName[j]
+        #                 leafId = self.getNodeByName(leafName).id
+        #                 split.append(leafId)
+        #             speciesNode.splits.append(split)
 
     def coalescent(self, distanceAboveRoot):
         """
@@ -108,7 +117,8 @@ class SpeciesTree:
 
         # set of extant species that an ancestral gene will eventually be fixed in;
         # cladeSet[node.id] = set of the genes at node.id
-        cladeSet = {}
+        fromSets = {}
+        toSets = {}
 
         # avoid doing repeated coalescence: 
         # a node will be lablled after finishing the coalesencent 
@@ -119,49 +129,48 @@ class SpeciesTree:
         # cladeSet[leafId] = 'leafId*' ('*' as seperater)
         for node in nodes:
             labelled[node.id] = False
-            cladeSet[node.id] = \
+            fromSets[node.id] = \
                 [str(node.id) + '*'] if not node.children else []
 
         while True:
             for leaf in oldLeaves:
-                # coalescent finished
                 if leaf == root.id:
-                    cladeSetIntoRoot = self.__coalescentRecurse(
-                        nodeId=root.id, branchLength=distanceAboveRoot,
-                        cladeSet=cladeSet, coalescentProcess=coalescentProcess)
+                    # coalescent finished
+                    toSets[root.id] = self.__coalescentRecurse(
+                        branchLength=distanceAboveRoot,
+                        fromSet=fromSets[root.id], subCoalescentProcess=coalescentProcess[root.id])
+                    cladeSetIntoRoot = toSets[root.id]
                     break
                 else:
                     parent = self.getNodeById(leaf).parent
                     children = self.getNodeById(parent).children
-                    # if the leaf has been labelled, skip
                     if labelled[leaf]:
+                        # if the leaf has been labelled, skip
                         continue
                     labelled[leaf] = True
 
-                    # first make sure there are genes coming out of both children
+                    # first make sure there are genes coming into both children
                     # then do coalescent within each child branch
                     # cladeSet will be updated from the gene comming into the branch
                     # to genes comming out of the branch
-                    if (len(cladeSet[children[0]]) != 0 
-                        and len(cladeSet[children[1]]) != 0):
-                        cladeSet[children[0]] = self.__coalescentRecurse(
-                                                nodeId=children[0], 
+                    if (len(fromSets[children[0]]) != 0 
+                        and len(fromSets[children[1]]) != 0):
+                        toSets[children[0]] = self.__coalescentRecurse(
                                                 branchLength=self.getNodeById(
                                                     children[0]).distanceToParent,
-                                                cladeSet=cladeSet, 
-                                                coalescentProcess=coalescentProcess)
+                                                fromSet=fromSets[children[0]], 
+                                                subCoalescentProcess=coalescentProcess[children[0]])
                         labelled[children[0]] = True
-                        cladeSet[children[1]] = self.__coalescentRecurse(
-                                                nodeId=children[1],
+                        toSets[children[1]] = self.__coalescentRecurse(
                                                 branchLength=self.getNodeById(
                                                     children[1]).distanceToParent,
-                                                cladeSet=cladeSet, 
-                                                coalescentProcess=coalescentProcess)  
+                                                fromSet=fromSets[children[1]], 
+                                                subCoalescentProcess=coalescentProcess[children[1]])
                         labelled[children[1]] = True
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
-                        cladeSet[parent] = list(set().union(
-                            cladeSet[children[0]], cladeSet[children[1]]))
+                        fromSets[parent] = list(set().union(
+                            toSets[children[0]], toSets[children[1]]))
                         
                         # if the parent is in newLeaves, do not add in any children of the parent
                         if len(newLeaves) > 0:
@@ -185,8 +194,6 @@ class SpeciesTree:
             # re-initialization for the next recursion
             # oldLeaves <- newLeaves
             # label <- false
-            # print('old',oldLeaves)
-            # print('new',tempNewLeaves)
             oldLeaves = tempNewLeaves.copy()
             newLeaves = []
             labelled = {}
@@ -195,7 +202,7 @@ class SpeciesTree:
 
         return coalescentProcess, cladeSetIntoRoot
 
-    def __coalescentRecurse(self, nodeId, branchLength, cladeSet, coalescentProcess):
+    def __coalescentRecurse(self, branchLength, fromSet, subCoalescentProcess):
         """
         This is the recursive part of the multispecies coalescent process:
         Given a set of n genes gathering into a branch in the species tree 
@@ -205,60 +212,56 @@ class SpeciesTree:
         the coalescence, named "to_set", and the distance from the last 
         coalescent event or the bottom of the branch.
         """
-        if len(cladeSet[nodeId]) <= 1:
-            coalescentProcess[nodeId].append({
-                    'fromSet': cladeSet[nodeId],
+        if len(fromSet) <= 1:
+            subCoalescentProcess.append({
+                    'fromSet': fromSet,
                     'toSet': None,
                     'distance': branchLength
                 })
-            return cladeSet[nodeId]
+            toSet = fromSet.copy()
+            return toSet
         else:
             # rate of coalescence in an ancestral branch = mean of each child branch
-            coalescentRate = len(cladeSet[nodeId]) \
-                      * self.__getCoalescentRateInAncestralBranch(cladeSet[nodeId])
-            fakeDistance = min(self.randomState.exponential(
-                scale=1.0 / coalescentRate, size=len(cladeSet[nodeId])-1))
-
+            coalescentRate = len(fromSet) * self.__coalescentRate
+            fakeDistance = self.randomState.exponential(scale=1.0/coalescentRate)
             # no coalescent event anymore in this branch
             if branchLength < fakeDistance:
-                temp_set = sorted(cladeSet[nodeId])
-                coalescentProcess[nodeId].append({
+                temp_set = sorted(fromSet)
+                subCoalescentProcess.append({
                     'fromSet': temp_set,
                     'toSet': None,
                     'distance': branchLength
                 })
                 # print(nodeId, coalescentProcess[nodeId],fakeDistance)
-                return cladeSet[nodeId]
+                toSet = fromSet.copy()
+                return toSet
             else:
                 # when coalescent, randomly merge 2 elements in the gene sets
                 # if there are more than one genes in the cladeSet, start merging
-                if len(cladeSet[nodeId]) >= 2:
-                    temp_set = sorted(cladeSet[nodeId])
+                if len(fromSet) >= 2:
+                    temp_set = sorted(fromSet)
                     # choose a couple, merge them, then put it back
                     couple = self.randomState.choice(
-                        cladeSet[nodeId], size=2, replace=False)
-                    cladeSet[nodeId] = [''.join(self.__starSorted(couple))] \
-                        + [e for e in cladeSet[nodeId] if e not in couple]
+                        fromSet, size=2, replace=False)
+                    toSet = [''.join(self.__starSorted(couple))] \
+                        + [e for e in fromSet if e not in couple]
 
                     # save process
-                    coalescentProcess[nodeId].append({
+                    subCoalescentProcess.append({
                         'fromSet': temp_set,
-                        'toSet': cladeSet[nodeId].copy(),
+                        'toSet': toSet.copy(),
                         'distance': fakeDistance
                     })
+                    branchLength = branchLength - fakeDistance
+                    # use recursion to simulate the case when there is
+                    # more than one coalescent events in the branch
+                    return self.__coalescentRecurse(
+                        branchLength=branchLength, fromSet=toSet, 
+                        subCoalescentProcess=subCoalescentProcess)
                 else:
                     # stop when cladeSet only has one element
-                    return cladeSet[nodeId]
-
-                branchLength = branchLength - fakeDistance
-
-                # use recursion to simulate the case when there is
-                # more than one coalescent events in the branch
-                self.__coalescentRecurse(
-                    nodeId=nodeId, branchLength=branchLength, cladeSet=cladeSet, 
-                    coalescentProcess=coalescentProcess)
-
-        return cladeSet[nodeId]
+                    toSet = fromSet.copy()
+                    return toSet         
 
     def __getCoalescentRateInAncestralBranch(self, cladeSet):
         indices = []
@@ -290,17 +293,6 @@ class SpeciesTree:
         splited = string.split('*')[:-1]
         splited = sorted([int(e) for e in splited])
         return [str(e) + '*' for e in splited]
-
-    def __checkSorted(self, couple):
-        """
-        1#4# + 2#3# -> 1#4#2#3# -> 1#2#3#4#
-        """
-        string = ''
-        for e in couple:
-            string += e
-        splited = string.split('#')[:-1]
-        splited = sorted([int(e) for e in splited])
-        return [str(e) + '#' for e in splited]
 
     def getTimeSequences(self, coalescentProcess):
         """
