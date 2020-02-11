@@ -1,5 +1,6 @@
 import skbio
 import numpy as np
+import math
 from collections import defaultdict
 from statistics import mean
 from .tree_table import *
@@ -202,6 +203,9 @@ class SpeciesTree:
 
         return coalescentProcess, cladeSetIntoRoot
 
+    def binom(self, n, k):
+        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
+
     def __coalescentRecurse(self, branchLength, fromSet, subCoalescentProcess):
         """
         This is the recursive part of the multispecies coalescent process:
@@ -222,7 +226,7 @@ class SpeciesTree:
             return toSet
         else:
             # rate of coalescence in an ancestral branch = mean of each child branch
-            coalescentRate = len(fromSet) * self.__coalescentRate
+            coalescentRate = self.binom(len(fromSet),2) * self.__coalescentRate
             fakeDistance = self.randomState.exponential(scale=1.0/coalescentRate)
             # no coalescent event anymore in this branch
             if branchLength < fakeDistance:

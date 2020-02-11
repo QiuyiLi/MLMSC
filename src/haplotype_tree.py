@@ -21,7 +21,7 @@ class HaplotypeTree:
         self.__eventRates = {}
         # self.__unlinkProb = None
         # self.__hemiplasy = None
-        self.__verbose = None
+        # self.__verbose = None
 
     def __repr__(self):
         return str(self.__treeTable)
@@ -119,12 +119,14 @@ class HaplotypeTree:
         #             childClades = [int(j) for j in childClades]
         #             geneNode.splits.append(childClades)
 
-    def setEventRates(self, duplicationPrmt, transferPrmt, lossPrmt, unlinkProb, hemiplasy):
+    def setEventRates(self, duplicationPrmt, transferPrmt, lossPrmt, unlinkProb, hemiplasy, verbose):
         self.__eventRates['d'] = duplicationPrmt
         self.__eventRates['t'] = transferPrmt
         self.__eventRates['l'] = lossPrmt
         self.__eventRates['u'] = unlinkProb
         self.__eventRates['h'] = hemiplasy
+        self.__eventRates['v'] = verbose
+
 
     # def setUnlinkProb(self, unlinkProb):
     #     self.__unlinkProb = unlinkProb
@@ -133,8 +135,8 @@ class HaplotypeTree:
     #     self.__hemiplasy = hemiplasy
 
     # detailed output for debugging
-    def setVerbose(self, verbose):
-        self.__verbose = verbose
+    # def setVerbose(self, verbose):
+    #     self.__verbose = verbose
 
     def createSkbioTree(self, timeSequences, geneNodeName):
         """
@@ -214,7 +216,7 @@ class HaplotypeTree:
                 parent=skbioTree)
             skbioTree.children = [childL, childR]
             return
-        # otherwise 
+        # otherwise, more general cases
         else:
             isFound = False
             for _, sequence in timeSequences.items():
@@ -575,8 +577,9 @@ class HaplotypeTree:
                     distanceAboveRoot=distanceAboveSpeciesNode, level=level)
 
                 if newHaplotypeTree:
-                    
-                    if self.verbose:
+                    verbose = self.eventRates['v']
+                    if verbose:
+                        
                         print(newHaplotypeTree)
                         print('new haplotype tree:')	
                         print(newHaplotypeTree.getSkbioTree().ascii_art())	
@@ -624,7 +627,8 @@ class HaplotypeTree:
                         else:
                             newNode.parent = geneNodeParent
 
-                        if self.verbose:
+                        verbose = self.eventRates['v']
+                        if verbose:
                             print('haplotype tree after:')	
                             print(haplotypeTree.getSkbioTree().ascii_art())
                     
@@ -667,8 +671,9 @@ class HaplotypeTree:
                                 haplotypeTree.setSkbioTree(newNode)
                             else:
                                 newNode.parent = geneNodeParent
-
-                            if self.verbose:
+                            verbose = self.eventRates['v']
+                            print('+'*140, verbose)
+                            if verbose:
                                 print('haplotype tree after:')	
                                 print(haplotypeTree.getSkbioTree().ascii_art())
 
@@ -683,7 +688,8 @@ class HaplotypeTree:
                 
                 if newHaplotypeTree:
 
-                    if self.verbose:
+                    verbose = self.eventRates['v']
+                    if verbose:
                         print(newHaplotypeTree)
                         print('new haplotype tree:')	
                         print(newHaplotypeTree.getSkbioTree().ascii_art())	
@@ -722,8 +728,8 @@ class HaplotypeTree:
                             haplotypeTree.setSkbioTree(newNode)
                         else:
                             newNode.parent = geneNodeParent
-
-                        if self.verbose:
+                        verbose = self.eventRates['v']
+                        if verbose:
                             print('haplotype tree after:')	
                             print(haplotypeTree.getSkbioTree().ascii_art())
         return haplotypeTree

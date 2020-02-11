@@ -213,11 +213,12 @@ class IxDTLModel:
             transferPrmt=self.parameters['transfer'],
             lossPrmt=self.parameters['loss'],
             unlinkProb=self.parameters['unlink'],
-            hemiplasy=self.parameters['hemiplasy'])
+            hemiplasy=self.parameters['hemiplasy'],
+            verbose=self.parameters['verbose'])
         # self.haplotypeTree.setUnlinkProb(
         #     unlinkProb=self.parameters['unlink'])
         # self.haplotypeTree.setHemiplasy(
         #     hemiplasy=self.parameters['hemiplasy'])
-        self.haplotypeTree.setVerbose(
-            verbose=self.parameters['verbose'])
+        # self.haplotypeTree.setVerbose(
+        #     verbose=self.parameters['verbose'])
         
