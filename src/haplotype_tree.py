@@ -672,7 +672,6 @@ class HaplotypeTree:
                             else:
                                 newNode.parent = geneNodeParent
                             verbose = self.eventRates['v']
-                            print('+'*140, verbose)
                             if verbose:
                                 print('haplotype tree after:')	
                                 print(haplotypeTree.getSkbioTree().ascii_art())
