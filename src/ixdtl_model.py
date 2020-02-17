@@ -100,16 +100,13 @@ class IxDTLModel:
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
 
+        
         # cut tree at losses
-        findIt = True
-        while findIt:
-            for node in geneSkbioTreeTruncated.traverse():
-                if (node.children 
-                    and 'loss' in node.children[0].name 
-                    and 'loss' in node.children[1].name):
-                    node.name += '_loss'
-                    findIt = True
-            findIt = False
+        geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
+        print('untruncated tree:')
+        print(geneSkbioTree.ascii_art())
+        print('truncated tree:')
+        print(geneSkbioTreeTruncated.ascii_art())
         for node in geneSkbioTreeTruncated.traverse():
             if 'loss' in node.name:
                 geneSkbioTreeTruncated.remove_deleted(
@@ -160,6 +157,34 @@ class IxDTLModel:
         f = open('./output/gene_tree_truncated.newick','w')
         f.write(str(geneSkbioTreeTruncated))
         f.close()
+        
+    def cutTree(self, untruncatedGeneTree):
+        root = untruncatedGeneTree.root()
+        untruncatedGeneTree = self.cutTreeRecurse(root, untruncatedGeneTree)[1]
+        return untruncatedGeneTree
+        
+    def cutTreeRecurse(self, node, untruncatedGeneTree):
+        if node.children:
+            if ('loss' in node.children[0].name
+                and 'loss' in node.children[1].name):
+                findIt = 1
+            elif ('loss' in node.children[0].name
+                    and 'loss' not in node.children[1].name):
+                findIt = self.cutTreeRecurse(node.children[1], untruncatedGeneTree)[0]
+            elif ('loss' in node.children[1].name
+                    and 'loss' not in node.children[0].name):
+                findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)[0]
+            else:
+                findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)[0]*\
+                    self.cutTreeRecurse(node.children[1], untruncatedGeneTree)[0]
+            if findIt:
+                node.name += '_loss'
+            return findIt, untruncatedGeneTree
+        else:
+            if 'loss' in node.name:
+                return 1, untruncatedGeneTree
+            else:
+                return 0, untruncatedGeneTree
 
     def setParameters(self, coalescent, recombination, duplication, transfer, loss, 
         hemiplasy, unlink, verbose):

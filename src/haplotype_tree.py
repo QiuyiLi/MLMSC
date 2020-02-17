@@ -67,7 +67,6 @@ class HaplotypeTree:
     # @property
     # def verbose(self):
     #     return self.__verbose
-
     def getSkbioTree(self):
         return self.__treeTable.skbioTree
     def setSkbioTree(self, skbioTree):

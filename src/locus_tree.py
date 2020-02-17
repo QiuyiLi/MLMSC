@@ -61,7 +61,7 @@ class LocusTree(SpeciesTree):
         return selectedCoalescentProcess
 
     """""""""""""""""""""""""""""""""""""""""""""""""""""
-    funtions for modelling (partly) linked duplications
+    funtions for modelling (partly) linked duplictions
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     
     """
@@ -141,7 +141,6 @@ class LocusTree(SpeciesTree):
             fromSets[node.id] = \
                 [str(node.id) + '*' + str(node.id) + '#'] if not node.children else []
         recomSets = fromSets.copy()
-
         
         while True:
             for leaf in oldLeaves:
@@ -315,10 +314,6 @@ class LocusTree(SpeciesTree):
         else:
             if copiedProcess:
                 toSet = fromSet.copy()
-                if not coalSet:
-                        coalSet = []
-                if not recomSet:
-                        recomSet = []
                 if copiedProcess['toSet']:
                     if self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet']):
                         [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
@@ -360,14 +355,8 @@ class LocusTree(SpeciesTree):
                             'distance': distance
                         })
                         distanceToAdd += distance
-                        if not coalSet:
-                            coalSet = []
-                        else: 
-                            coalSet = coalSet
-                        if not recomSet:
-                            recomSet = []
-                        else:
-                            recomSet = recomSet
+                        coalSet = coalSet
+                        recomSet = recomSet
                 else:
                     toSet = fromSet.copy()
                     coalescentProcess[nodeId].append({
