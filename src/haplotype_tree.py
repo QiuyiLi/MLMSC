@@ -587,6 +587,7 @@ class HaplotypeTree:
                         print(haplotypeTree.getSkbioTree().ascii_art())	
 
                     if ancestral:
+                        print('*'*100)
                         # now we assume that the new locus is unlinked
                         # hence it will always be non-ancestral
                         eventIndex = eventIndex + 1
@@ -634,6 +635,7 @@ class HaplotypeTree:
                     
                     else:
                         # non-ancestral
+                        print('$'*100)
                         geneNodeName, distanceAboveGeneNode, branchLength = \
                             self.coalescentJoining(
                             event=event, haplotypeTree=haplotypeTree)
@@ -748,8 +750,9 @@ class HaplotypeTree:
             newLocusTree.initialize(nodes=newLocusTreeNodes, skbioTree=newLocusSkbioTree)
             # print('newLocusTree', newLocusTree)	
             newLocusTree.coalescentRate = self.speciesTree.coalescentRate
-            # unlinked = event['unlinked']
-            unlinked = True
+            newLocusTree.recombinationRate = self.speciesTree.recombinationRate
+            unlinked = event['unlinked']
+            # unlinked = False
             fullCoalescentProcess = None
             selectedCoalescentProcess = None
             chosenGeneName = None

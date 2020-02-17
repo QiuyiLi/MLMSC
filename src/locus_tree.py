@@ -60,10 +60,8 @@ class LocusTree(SpeciesTree):
                         })
         return selectedCoalescentProcess
 
-    
-    
     """""""""""""""""""""""""""""""""""""""""""""""""""""
-    Unfinished funtions
+    funtions being tested
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     
     """
@@ -149,7 +147,6 @@ class LocusTree(SpeciesTree):
             for leaf in oldLeaves:
                 # coalescent finished
                 if leaf == root.id:
-                    # print('root')
                     cladeSetIntoRoot, _, _ = self.__speciesBranchRecurse(nodeId=root.id, 
                         branchLength=self.getNodeById(root.id).distanceToParent, 
                         coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
@@ -161,8 +158,6 @@ class LocusTree(SpeciesTree):
                     labelled[leaf] = True
 
                     parent = self.getNodeById(leaf).parent
-                    # print('leaf=========',leaf)
-                    # print('parent=========',parent)
                     children = self.getNodeById(parent).children
                     # if the leaf has been labelled, skip
                     
@@ -172,8 +167,6 @@ class LocusTree(SpeciesTree):
                     # to genes comming out of the branch
                     if (len(fromSets[children[0]]) != 0 
                         and len(fromSets[children[1]]) != 0):
-                        # storedFromSet0 = fromSets[children[0]]
-                        # storedFromSet1 = fromSets[children[1]]
                         toSets[children[0]], coalSets[children[0]], recomSets[children[0]] = \
                             self.__speciesBranchRecurse(nodeId=children[0], 
                             branchLength=self.getNodeById(children[0]).distanceToParent, 
@@ -186,17 +179,11 @@ class LocusTree(SpeciesTree):
                             coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
                             fromSet=fromSets[children[1]], coalSet=coalSets[children[1]], recomSet=recomSets[children[1]]) 
                         labelled[children[1]] = True
-                        pprint.pprint(coalescentProcess)
+                        
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
-                        # fromSets[children[0]] = storedFromSet0
-                        # fromSets[children[1]] = storedFromSet1
-
-                        # print('toSet0',toSets[children[0]])
-                        # print('toSet1',toSets[children[1]])
                         fromSets[parent] = list(set().union(
                             toSets[children[0]], toSets[children[1]]))
-                        # print('fromset',fromSets[parent])
                         recomSets[parent] = list(set().union(
                             recomSets[children[0]], recomSets[children[1]]))
 
@@ -225,8 +212,6 @@ class LocusTree(SpeciesTree):
             # re-initialization for the next recursion
             # oldLeaves <- newLeaves
             # label <- false
-            # print('old',oldLeaves)
-            # print('new',tempNewLeaves)
             oldLeaves = tempNewLeaves.copy()
             newLeaves = []
             labelled = {}
@@ -242,7 +227,6 @@ class LocusTree(SpeciesTree):
                 elif copiedRootGene in clade:
                     ancestralClades.append(clade)
         fullClades = ancestralClades + nonAncestralClades
-        # print('cladeSetIntoRoot', cladeSetIntoRoot)
         chosenGeneName = np.random.choice(cladeSetIntoRoot)
         if chosenGeneName not in fullClades:
             # discad the unobservable ancestral duplication
@@ -270,22 +254,18 @@ class LocusTree(SpeciesTree):
                 coalescentProcess, coalSet, recomSet, copiedProcess,
                 initial=True):
         recombinationRate = self.recombinationRate
-        print('+'*40, recombinationRate)
         coalescentRate = self.coalescentRate
-        print('+'*40, coalescentRate)
+        
 
-        if len(coalSet) > 0:
-            coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate), 
-                                    size=len(coalSet))
+        if coalSet and len(coalSet) > 0:
+            coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate, size=len(coalSet)))
         else:
             coalDistance = float('inf')
-        if len(recomSet) > 0:
-            # print('!'*40)
+        if recomSet and len(recomSet) > 0:
             recomDistance = min(self.randomState.exponential(scale=1.0/recombinationRate, size=len(recomSet)))
         else:
             recomDistance = float('inf')
         if coalDistance < min(recomDistance, distance):
-            print('coal')
             chosenGene = np.random.choice(coalSet)
             coalSet = coalSet.remove(chosenGene)
             targets = fromSet.copy()
@@ -305,14 +285,13 @@ class LocusTree(SpeciesTree):
                 'toSet': toSet,
                 'distance': coalDistance
             })
-            self.__geneBranchRecurse(nodeId=nodeId, distance=distance-coalDistance, distanceToAdd=0,
+            return self.__geneBranchRecurse(nodeId=nodeId, distance=distance-coalDistance, distanceToAdd=0,
                 fromSet=toSet, coalescentProcess=coalescentProcess,
                 coalSet=coalSet, recomSet=recomSet, 
                 copiedProcess=copiedProcess,
                 initial=False)
 
         elif recomDistance < min(coalDistance, distance):
-            print('recom')
             chosenGene = np.random.choice(recomSet)
             recomSet = recomSet.remove(chosenGene)
             starString, checkString, mergedString = self.__getBipartition(chosenGene)
@@ -328,57 +307,84 @@ class LocusTree(SpeciesTree):
                 'toSet': toSet,
                 'distance': recomDistance
             })
-            self.__geneBranchRecurse(nodeId=nodeId, distance=distance-recomDistance, distanceToAdd=0,
+            return self.__geneBranchRecurse(nodeId=nodeId, distance=distance-recomDistance, distanceToAdd=0,
                 fromSet=toSet, coalescentProcess=coalescentProcess,
                 coalSet=coalSet, recomSet=recomSet,
                 copiedProcess=copiedProcess,
                 initial=False)
         else:
-            print('none')
-            if copiedProcess['toSet']:
-                [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
-                pprint.pprint(copiedProcess)
-                # print('couple0=============',coupleL, coupleR)
-                for e in fromSet:
-                    if coupleL in e:
-                        coupleL = e
-                    elif coupleR in e:
-                        coupleR = e
+            if copiedProcess:
+                toSet = fromSet.copy()
+                if not coalSet:
+                        coalSet = []
+                if not recomSet:
+                        recomSet = []
+                if copiedProcess['toSet']:
+                    if self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet']):
+                        [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
+                        for e in fromSet:
+                            if coupleL in e:
+                                coupleL = e
+                            elif coupleR in e:
+                                coupleR = e
+                            else:
+                                continue
+                        couple = ''.join([coupleL, coupleR])
+                        starString, checkString, mergedString = self.__getBipartition(couple)
+                        toSet = fromSet.copy()
+                        toSet.remove(coupleL)
+                        toSet.remove(coupleR)
+                        toSet.append(mergedString)
+
+                        recomSet = []
+                        coalSet = []
+                        for e in toSet:
+                            if '*' in e and '#' in e:
+                                recomSet.append(e)
+                            elif '#' in e:
+                                coalSet.append(e) 
+
+                        if initial:
+                            distance += distanceToAdd
+                        coalescentProcess[nodeId].append({
+                            'fromSet': fromSet,
+                            'toSet': toSet,
+                            'distance': distance
+                        })
+                        distanceToAdd = 0
                     else:
-                        continue
-                couple = ''.join([coupleL, coupleR])
-                # print('couple=============',coupleL, coupleR)
-                starString, checkString, mergedString = self.__getBipartition(couple)
-                # print('string=============',starString, checkString, mergedString)
-                # print('fromset0==========',fromSet)
-                toSet = fromSet.copy()
-                # print('fromset1==========',fromSet)
-                toSet.remove(coupleL)
-                # print('fromset2==========',fromSet)
-                toSet.remove(coupleR)
-                # print('fromset3==========',fromSet)
-                toSet.append(mergedString)
-                # print('fromset4==========',fromSet)
-                
-                # print('toset============',toSet)
-                if initial:
-                    distance += distanceToAdd
-                coalescentProcess[nodeId].append({
-                    'fromSet': fromSet,
-                    'toSet': toSet,
-                    'distance': distance
-                })
-                distanceToAdd = 0
-            else:
-                toSet = fromSet.copy()
-                coalescentProcess[nodeId].append({
-                    'fromSet': fromSet,
-                    'toSet': None,
-                    'distance': distance
-                })
-                distanceToAdd += distance
-            # print('gene recurse')
-        return toSet, coalSet, recomSet, distanceToAdd
+                        toSet = fromSet.copy()
+                        coalescentProcess[nodeId].append({
+                            'fromSet': fromSet,
+                            'toSet': None,
+                            'distance': distance
+                        })
+                        distanceToAdd += distance
+                        if not coalSet:
+                            coalSet = []
+                        else: 
+                            coalSet = coalSet
+                        if not recomSet:
+                            recomSet = []
+                        else:
+                            recomSet = recomSet
+                else:
+                    toSet = fromSet.copy()
+                    coalescentProcess[nodeId].append({
+                        'fromSet': fromSet,
+                        'toSet': None,
+                        'distance': distance
+                    })
+                    distanceToAdd += distance
+                    if not coalSet:
+                        coalSet = []
+                    else: 
+                        coalSet = coalSet
+                    if not recomSet:
+                        recomSet = []
+                    else:
+                        recomSet = recomSet
+            return toSet, coalSet, recomSet, distanceToAdd
 
     """
     no need for these for the current version
@@ -450,22 +456,18 @@ class LocusTree(SpeciesTree):
         withinBranchProcess = copiedHaplotypeTree[nodeId]
         distanceToAdd = 0
         tempFromSet = fromSet.copy()
-        # toSet = None
+        toSet = fromSet.copy()
 
         if withinBranchProcess:
-            pprint.pprint(copiedHaplotypeTree)
-            pprint.pprint(withinBranchProcess)
-            print('nodeid========',nodeId)
             for i in range(len(withinBranchProcess)):
                 copiedProcess = withinBranchProcess[i]
                 distance = withinBranchProcess[i]['distance']
-                toSet, coalSet, recomSet, distanceToAdd = \
+                toSet, coalSet, recomSet, _ = \
                     self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
                     distanceToAdd=distanceToAdd, fromSet=tempFromSet,
                     coalescentProcess=coalescentProcess,
                     coalSet=coalSet, recomSet=recomSet, 
                     copiedProcess=copiedProcess)
                 tempFromSet = toSet.copy()
-                print('species recurse')
 
         return toSet, coalSet, recomSet

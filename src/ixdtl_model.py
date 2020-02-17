@@ -189,7 +189,8 @@ class IxDTLModel:
         
         self.speciesTree.setRecombinationRate(
             recombinationPrmt=self.__parameters['recombination'])
-        # print(self.speciesTree)	
+
+        # print('='*40, self.speciesTree.recombinationRate)	
         if self.__parameters['verbose']:
             print('species tree:')	
             print(self.speciesTree)	

@@ -78,7 +78,7 @@ def readCommand(argv):
     parser.add_option(
         '-u', '--unlinkRate', type='float', dest='unlinkArgs',
         help=default('probability for a duplication to be unlinked'),
-        default=1)
+        default=0.5)
 
     parser.add_option(
         '-h', '--hemiplasy', type='int', dest='hemiplasy',
