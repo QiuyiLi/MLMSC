@@ -45,7 +45,7 @@ def readCommand(argv):
         help=default(
             'the unit rate of coalescent'
             'e.g., "-c 0.5"'),
-        default=0.5)
+        default=1)
 
     parser.add_option(
         '-r', '--recombinationRate', type='float', dest='recombinationArgs',
@@ -59,21 +59,21 @@ def readCommand(argv):
         help=default(
             'the rate of occurence of duplications, '
             'e.g., "-d 0.2"'),
-        default=0.1)
+        default=0.2)
         
     parser.add_option(
         '-t', '--transferRate', type='float', dest='transferArgs',
         help=default(
             'the rate of occurence of transfers, '
             'e.g., "-t 0.1"'),
-        default=0)
+        default=0.1)
 
     parser.add_option(
         '-l', '--lossRate', type='float', dest='lossArgs',
         help=default(
             'the rate of occurence of losses, '
             'e.g., "-l 0.2"'),
-        default=0)
+        default=0.2)
 
     parser.add_option(
         '-u', '--unlinkRate', type='float', dest='unlinkArgs',

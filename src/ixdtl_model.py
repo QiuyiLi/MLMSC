@@ -54,25 +54,41 @@ class IxDTLModel:
 
         # construct the original haplotype tree according to the species tree
         self.constructOriginalHaplotypeTree()
-
-        coalescentTreeProcess, cladeSetIntoRoot = self.speciesTree.coalescent(
+        
+        coalescentTreeProcessD, _ = self.speciesTree.coalescent(
                 distanceAboveRoot=float('inf'))
-        coalescentTree = HaplotypeTree(
+        coalescentTreeD = HaplotypeTree(
             randomState=self.randomState, 
             speciesTree=self.speciesTree, 
             locusTree=self.speciesTree)
-        coalescentTree.initialize(
+        coalescentTreeD.initialize(
             locusTree=self.speciesTree, 
-            coalescentProcess=coalescentTreeProcess, 
-            fullCoalescentProcess=coalescentTreeProcess,
+            coalescentProcess=coalescentTreeProcessD, 
+            fullCoalescentProcess=coalescentTreeProcessD,
             rename=False)
-        coalescentTree.eventRates = self.haplotypeTree.eventRates
-        coalescentTreeEvents = coalescentTree.DTprocess(
+        coalescentTreeD.parameters = self.haplotypeTree.parameters
+        coalescentTreeEventsD = coalescentTreeD.Dprocess(
+            distanceAboveRoot=0, threshold=float('inf'), event=None)
+
+        coalescentTreeProcessT, _ = self.speciesTree.coalescent(
+                distanceAboveRoot=float('inf'))
+        coalescentTreeT = HaplotypeTree(
+            randomState=self.randomState, 
+            speciesTree=self.speciesTree, 
+            locusTree=self.speciesTree)
+        coalescentTreeT.initialize(
+            locusTree=self.speciesTree, 
+            coalescentProcess=coalescentTreeProcessT, 
+            fullCoalescentProcess=coalescentTreeProcessT,
+            rename=False,
+            event = 'transfer')
+        coalescentTreeT.parameters = self.haplotypeTree.parameters
+        coalescentTreeEventsT = coalescentTreeT.Tprocess(
             distanceAboveRoot=0, threshold=float('inf'), event=None)
 
         # events = self.haplotypeTree.Lprocess(distanceAboveRoot=0) + coalescentTreeEvents
         # events.sort(reverse=True, key=lambda x: x['eventHeight'])
-
+        coalescentTreeEvents =  coalescentTreeEventsD + coalescentTreeEventsT
         coalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
         events = coalescentTreeEvents + self.haplotypeTree.Lprocess(distanceAboveRoot=0)
 

@@ -24,7 +24,7 @@ class LocusTree(SpeciesTree):
     # incomplete coalescent for IxDTL
     def incompleteCoalescent(self, distanceAboveRoot):
         fullCoalescentProcess, genesIntoRoot = self.coalescent(distanceAboveRoot)
-        chosenGene = np.random.choice(genesIntoRoot)
+        chosenGene = self.randomState.choice(genesIntoRoot)
         selectedCoalescentProcess = self.__selectCoalescentProcess(
             fullCoalescentProcess, chosenGene)
         return fullCoalescentProcess, selectedCoalescentProcess, chosenGene
@@ -61,11 +61,11 @@ class LocusTree(SpeciesTree):
         return selectedCoalescentProcess
 
     """""""""""""""""""""""""""""""""""""""""""""""""""""
-    funtions being tested
+    funtions for modelling (partly) linked duplications
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     
     """
-    no need for this for the current version
+    
     """
     def __filteredCoalescentWithRecombinationProcess(self, coalescentProcess, cladeSetIntoRoot):
         filteredProcess = defaultdict(list)
@@ -106,7 +106,7 @@ class LocusTree(SpeciesTree):
         return filteredProcess, filteredClades
 
     """
-    no need for this for the current version
+    
     """
     def coalescentWithRecombination(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
         nodes = self.getNodes()
@@ -227,7 +227,7 @@ class LocusTree(SpeciesTree):
                 elif copiedRootGene in clade:
                     ancestralClades.append(clade)
         fullClades = ancestralClades + nonAncestralClades
-        chosenGeneName = np.random.choice(cladeSetIntoRoot)
+        chosenGeneName = self.randomState.choice(cladeSetIntoRoot)
         if chosenGeneName not in fullClades:
             # discad the unobservable ancestral duplication
             return None, None, None, None, True
@@ -266,11 +266,11 @@ class LocusTree(SpeciesTree):
         else:
             recomDistance = float('inf')
         if coalDistance < min(recomDistance, distance):
-            chosenGene = np.random.choice(coalSet)
+            chosenGene = self.randomState.choice(coalSet)
             coalSet = coalSet.remove(chosenGene)
             targets = fromSet.copy()
             targets.remove(chosenGene)
-            target = np.random.choice(targets)
+            target = self.randomState.choice(targets)
             couple = ''.join([chosenGene, target])
             starString, checkString, mergedString = self.__getBipartition(couple)
             recomSet = recomSet.append(mergedString)
@@ -292,7 +292,7 @@ class LocusTree(SpeciesTree):
                 initial=False)
 
         elif recomDistance < min(coalDistance, distance):
-            chosenGene = np.random.choice(recomSet)
+            chosenGene = self.randomState.choice(recomSet)
             recomSet = recomSet.remove(chosenGene)
             starString, checkString, mergedString = self.__getBipartition(chosenGene)
             coalSet = coalSet.append(checkString)
