@@ -160,31 +160,30 @@ class IxDTLModel:
         
     def cutTree(self, untruncatedGeneTree):
         root = untruncatedGeneTree.root()
-        untruncatedGeneTree = self.cutTreeRecurse(root, untruncatedGeneTree)[1]
+        self.cutTreeRecurse(root, untruncatedGeneTree)
         return untruncatedGeneTree
-        
+    
     def cutTreeRecurse(self, node, untruncatedGeneTree):
         if node.children:
-            if ('loss' in node.children[0].name
-                and 'loss' in node.children[1].name):
-                findIt = 1
-            elif ('loss' in node.children[0].name
-                    and 'loss' not in node.children[1].name):
-                findIt = self.cutTreeRecurse(node.children[1], untruncatedGeneTree)[0]
-            elif ('loss' in node.children[1].name
-                    and 'loss' not in node.children[0].name):
-                findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)[0]
+            if 'loss' in node.children[0].name:
+                if 'loss' in node.children[1].name:
+                    findIt = 1
+                else:
+                    findIt = self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
             else:
-                findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)[0]*\
-                    self.cutTreeRecurse(node.children[1], untruncatedGeneTree)[0]
+                if 'loss' in node.children[1].name:
+                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)
+                else:
+                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)*\
+                        self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
             if findIt:
                 node.name += '_loss'
-            return findIt, untruncatedGeneTree
+            return findIt
         else:
             if 'loss' in node.name:
-                return 1, untruncatedGeneTree
+                return 1
             else:
-                return 0, untruncatedGeneTree
+                return 0
 
     def setParameters(self, coalescent, recombination, duplication, transfer, loss, 
         hemiplasy, unlink, verbose):
