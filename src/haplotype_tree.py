@@ -67,6 +67,7 @@ class HaplotypeTree:
     # @property
     # def verbose(self):
     #     return self.__verbose
+
     def getSkbioTree(self):
         return self.__treeTable.skbioTree
     def setSkbioTree(self, skbioTree):
@@ -376,7 +377,6 @@ class HaplotypeTree:
         else:
             distanceT = self.randomState.exponential(
                 scale=1.0 / transferRate)
-        # duplication happens first
         if distanceT < distanceAboveRoot:
             eventHeight = self.getDistanceToLeaf(node.id) + distanceAboveRoot - distanceT
             speciesTreeHeight = self.speciesTree.getTreeHeight()
@@ -627,6 +627,9 @@ class HaplotypeTree:
         selectedCoalescentProcess = haplotypeTree.coalescentProcess
         fullCoalescentProcess = haplotypeTree.fullCoalescentProcess
         eventIndex = -1
+        # print('*'*80)
+        # print(haplotypeTree)
+        # pprint.pprint(events)
         
         for event in events:
             if (event['type'] == 'loss'):

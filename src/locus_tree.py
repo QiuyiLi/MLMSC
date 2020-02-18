@@ -181,13 +181,9 @@ class LocusTree(SpeciesTree):
                         
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
-                        fromSets[parent] = list(set().union(
-                            toSets[children[0]], toSets[children[1]]))
-                        recomSets[parent] = list(set().union(
-                            recomSets[children[0]], recomSets[children[1]]))
-
-                        coalSets[parent] = list(set().union(
-                            coalSets[children[0]], coalSets[children[1]])) 
+                        fromSets[parent] = toSets[children[0]] + toSets[children[1]]
+                        recomSets[parent] = recomSets[children[0]] + recomSets[children[1]]
+                        coalSets[parent] = coalSets[children[0]]+ coalSets[children[1]]
                         
 
                         # if the parent is in newLeaves, do not add in any children of the parent

@@ -170,8 +170,7 @@ class SpeciesTree:
                         labelled[children[1]] = True
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
-                        fromSets[parent] = list(set().union(
-                            toSets[children[0]], toSets[children[1]]))
+                        fromSets[parent] = toSets[children[0]] + toSets[children[1]]
                         
                         # if the parent is in newLeaves, do not add in any children of the parent
                         if len(newLeaves) > 0:
@@ -230,7 +229,7 @@ class SpeciesTree:
             fakeDistance = self.randomState.exponential(scale=1.0/coalescentRate)
             # no coalescent event anymore in this branch
             if branchLength < fakeDistance:
-                temp_set = sorted(fromSet)
+                temp_set = fromSet
                 subCoalescentProcess.append({
                     'fromSet': temp_set,
                     'toSet': None,
@@ -243,7 +242,7 @@ class SpeciesTree:
                 # when coalescent, randomly merge 2 elements in the gene sets
                 # if there are more than one genes in the cladeSet, start merging
                 if len(fromSet) >= 2:
-                    temp_set = sorted(fromSet)
+                    temp_set = fromSet
                     # choose a couple, merge them, then put it back
                     couple = self.randomState.choice(
                         fromSet, size=2, replace=False)

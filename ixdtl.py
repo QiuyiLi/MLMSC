@@ -41,7 +41,14 @@ def readCommand(argv):
         metavar='INPUT_FILE')
 
     parser.add_option(
-        '-c', '--coalescentArgs', type='float', dest='coalescentArgs',
+        '-s', '--seed', type='int', dest='seedArgs',
+        help=default(
+            'the seed number'
+            'e.g., "-s 0"'),
+        default=None)
+
+    parser.add_option(
+        '-c', '--coalescentRate', type='float', dest='coalescentArgs',
         help=default(
             'the unit rate of coalescent'
             'e.g., "-c 0.5"'),
@@ -59,7 +66,7 @@ def readCommand(argv):
         help=default(
             'the rate of occurence of duplications, '
             'e.g., "-d 0.2"'),
-        default=0.8)
+        default=0.3)
         
     parser.add_option(
         '-t', '--transferRate', type='float', dest='transferArgs',
@@ -73,10 +80,10 @@ def readCommand(argv):
         help=default(
             'the rate of occurence of losses, '
             'e.g., "-l 0.2"'),
-        default=0.8)
+        default=0.1)
 
     parser.add_option(
-        '-u', '--unlinkRate', type='float', dest='unlinkArgs',
+        '-u', '--unlinkProb', type='float', dest='unlinkArgs',
         help=default('probability for a duplication to be unlinked'),
         default=0.5)
 
@@ -105,6 +112,7 @@ def readCommand(argv):
     args['inputFile'] = options.inputFile
 
     # distribution arguments
+    args['seedArgs'] = options.seedArgs
     args['coalescentArgs'] = options.coalescentArgs
     args['recombinationArgs'] = options.recombinationArgs
     args['duplicationArgs'] = options.duplicationArgs
@@ -122,13 +130,12 @@ def readCommand(argv):
         parser.error('Invalid verbose option: ' +
                      str(options.verbose))
     args['verbose'] = True if options.verbose == 1 else False
-
     return args
 
 
 def runModel(**args):
-    model = IxDTLModel()
-    # model = IxDTLModel(seed=14)
+    seed = args['seedArgs']
+    model = IxDTLModel(seed=seed)
     model.run(**args)
 
 
@@ -143,7 +150,7 @@ if __name__ == '__main__':
 
     > python ixdtl.py --help
     """
-    args = readCommand(sys.argv[1:])  # Get ixdtl components based on input
+    args= readCommand(sys.argv[1:])  # Get ixdtl components based on input
     runModel(**args)
 
     pass

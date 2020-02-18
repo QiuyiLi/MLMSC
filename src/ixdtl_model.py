@@ -6,11 +6,11 @@ from .exception import *
 
 
 class IxDTLModel:
-    # def __init__(self, seed=0):
-    #     self.__randomState = np.random.RandomState(seed)
-    def __init__(self):
-        self.__randomState = np.random.RandomState()
-
+    def __init__(self, seed=None):
+        if seed == None:
+            self.__randomState = np.random.RandomState()
+        else:
+            self.__randomState = np.random.RandomState(seed)
         self.__speciesTree = None
         self.__haplotypeTree = None
         self.__locusTrees = []
@@ -36,7 +36,7 @@ class IxDTLModel:
     def randomState(self):
         return self.__randomState
 
-    def run(self, inputFile, coalescentArgs, recombinationArgs, duplicationArgs, transferArgs, 
+    def run(self, inputFile, seedArgs, coalescentArgs, recombinationArgs, duplicationArgs, transferArgs, 
         lossArgs, unlinkArgs, hemiplasy, verbose):
         # set parameters
         self.setParameters(
@@ -103,10 +103,6 @@ class IxDTLModel:
         
         # cut tree at losses
         geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
-        print('untruncated tree:')
-        print(geneSkbioTree.ascii_art())
-        print('truncated tree:')
-        print(geneSkbioTreeTruncated.ascii_art())
         for node in geneSkbioTreeTruncated.traverse():
             if 'loss' in node.name:
                 geneSkbioTreeTruncated.remove_deleted(
@@ -114,6 +110,14 @@ class IxDTLModel:
         geneSkbioTreeTruncated.prune()
         if not geneSkbioTreeTruncated:
                 print('Exception: ALL LOST')
+                # save newick to file
+                f = open('./output/gene_tree_full.newick','w')
+                f.write(str(geneSkbioTree))
+                f.close()
+
+                f = open('./output/gene_tree_truncated.newick','w')
+                f.write('')
+                f.close()
                 return
 
         # visualization
@@ -240,9 +244,8 @@ class IxDTLModel:
     def constructOriginalHaplotypeTree(self):
         self.__haplotypeTree = HaplotypeTree(
             randomState=self.randomState, speciesTree=self.speciesTree, locusTree=self.speciesTree)
-
         self.haplotypeTree.initialize(locusTree=self.speciesTree)
-
+        
         if self.__parameters['verbose']:
             print('original haplotype tree:')	
             print(self.haplotypeTree)	
