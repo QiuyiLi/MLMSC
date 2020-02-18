@@ -245,12 +245,11 @@ class IxDTLModel:
         self.__haplotypeTree = HaplotypeTree(
             randomState=self.randomState, speciesTree=self.speciesTree, locusTree=self.speciesTree)
         self.haplotypeTree.initialize(locusTree=self.speciesTree)
-        
+
         if self.__parameters['verbose']:
             print('original haplotype tree:')	
             print(self.haplotypeTree)	
             print(self.haplotypeTree.getSkbioTree().ascii_art())	
-            print()
 
         self.haplotypeTree.setEventRates(
             duplicationPrmt=self.parameters['duplication'],

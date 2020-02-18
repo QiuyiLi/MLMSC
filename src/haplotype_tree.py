@@ -445,7 +445,6 @@ class HaplotypeTree:
                 speciesId = int(geneName[:-1])    
         return speciesId
 
-
     """
     unused function
     """
@@ -649,7 +648,6 @@ class HaplotypeTree:
                 if newHaplotypeTree:
                     verbose = self.parameters['v']
                     if verbose:
-                        
                         print(newHaplotypeTree)
                         print('new haplotype tree:')	
                         print(newHaplotypeTree.getSkbioTree().ascii_art())	

@@ -175,7 +175,8 @@ class TreeTable:
             # rename all tree nodes
             self.__renameTreeNodes(skbioTree)
 
-        # assign ids in reversed time order
+        # assign reversed time order ids
+        # the 'real' id used in the program
         queue = Queue()
         visited = set()
         for treeNode in skbioTree.tips():
@@ -247,6 +248,10 @@ class TreeTable:
             return skbioTree.name
 
     def __assignFakeIds(self, skbioTree):
+        """
+        postoder ids
+        not used in the program
+        """
         index = 0
         for treeNode in skbioTree.postorder():
             entry = self.getEntryById(treeNode.id)

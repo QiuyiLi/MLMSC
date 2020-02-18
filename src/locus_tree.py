@@ -243,7 +243,7 @@ class LocusTree(SpeciesTree):
         return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral
 
     """
-    no need for this for the current version
+    
     """
     def __geneBranchRecurse(self, nodeId, distance, distanceToAdd, fromSet, 
                 coalescentProcess, coalSet, recomSet, copiedProcess,
@@ -253,11 +253,11 @@ class LocusTree(SpeciesTree):
         
 
         if coalSet and len(coalSet) > 0:
-            coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate, size=len(coalSet)))
+            coalDistance = self.randomState.exponential(scale=1.0 / coalescentRate)
         else:
             coalDistance = float('inf')
         if recomSet and len(recomSet) > 0:
-            recomDistance = min(self.randomState.exponential(scale=1.0/recombinationRate, size=len(recomSet)))
+            recomDistance = self.randomState.exponential(scale=1.0/recombinationRate)
         else:
             recomDistance = float('inf')
         if coalDistance < min(recomDistance, distance):
@@ -372,7 +372,6 @@ class LocusTree(SpeciesTree):
             return toSet, coalSet, recomSet, distanceToAdd
 
     """
-    no need for these for the current version
     utility functions for coalescentWithRecombination
     """
     def __starReplace(self, string):
@@ -434,7 +433,7 @@ class LocusTree(SpeciesTree):
         return temp
 
     """
-    no need for this for the current version
+    
     """
     def __speciesBranchRecurse(self, nodeId, branchLength, coalescentProcess, 
         copiedHaplotypeTree, fromSet, coalSet, recomSet):

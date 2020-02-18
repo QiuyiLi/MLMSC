@@ -134,8 +134,7 @@ def readCommand(argv):
 
 
 def runModel(**args):
-    seed = args['seedArgs']
-    model = IxDTLModel(seed=seed)
+    model = IxDTLModel(seed=args['seedArgs'])
     model.run(**args)
 
 
