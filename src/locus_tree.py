@@ -252,12 +252,12 @@ class LocusTree(SpeciesTree):
         coalescentRate = self.coalescentRate
         
 
-        if coalSet and len(coalSet) > 0:
-            coalDistance = self.randomState.exponential(scale=1.0 / coalescentRate)
+        if coalSet and len(coalSet) > 0 and coalescentRate > 0:
+            coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate, size=len(coalSet)))
         else:
             coalDistance = float('inf')
-        if recomSet and len(recomSet) > 0:
-            recomDistance = self.randomState.exponential(scale=1.0/recombinationRate)
+        if recomSet and len(recomSet) > 0 and recombinationRate > 0:
+            recomDistance = min(self.randomState.exponential(scale=1.0/recombinationRate, size=len(recomSet)))
         else:
             recomDistance = float('inf')
         if coalDistance < min(recomDistance, distance):
