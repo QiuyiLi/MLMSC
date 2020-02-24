@@ -149,7 +149,8 @@ class LocusTree(SpeciesTree):
                     cladeSetIntoRoot, _, _ = self.__speciesBranchRecurse(nodeId=root.id, 
                         branchLength=self.getNodeById(root.id).distanceToParent, 
                         coalescentProcess=coalescentProcess, copiedHaplotypeTree=copiedHaplotypeTree, 
-                        fromSet=fromSets[root.id], coalSet=coalSets[root.id], recomSet=coalSets[root.id])
+                        fromSet=fromSets[root.id], coalSet=coalSets[root.id], recomSet=coalSets[root.id],
+                        distanceAboveRoot=distanceAboveRoot)
                     break
                 else:
                     if labelled[leaf]:
@@ -219,12 +220,20 @@ class LocusTree(SpeciesTree):
             if '#' in clade:
                 if '*' not in clade:
                     nonAncestralClades.append(clade)
-                elif copiedRootGene in clade:
-                    ancestralClades.append(clade)
+                else: 
+                    for e in copiedRootGene:
+                        if e in clade:
+                            ancestralClades.append(clade)
+                            break
+                # else:
+                #     ancestralClades.append(clade)
         fullClades = ancestralClades + nonAncestralClades
+        # print('fullclades=',fullClades)
+        # print('rootclades=', cladeSetIntoRoot)
         chosenGeneName = self.randomState.choice(cladeSetIntoRoot)
         if chosenGeneName not in fullClades:
             # discad the unobservable ancestral duplication
+            # print('reach here')
             return None, None, None, None, True
         ancestral = False
         geneNodeName = None
@@ -246,18 +255,20 @@ class LocusTree(SpeciesTree):
     
     """
     def __geneBranchRecurse(self, nodeId, distance, distanceToAdd, fromSet, 
-                coalescentProcess, coalSet, recomSet, copiedProcess,
-                initial=True):
-        recombinationRate = self.recombinationRate
-        coalescentRate = self.coalescentRate
+            coalescentProcess, coalSet, recomSet, copiedProcess,
+            initial=True):
+        unitRecombinationRate = self.recombinationRate
+        unitCoalescentRate = self.coalescentRate
         
 
-        if coalSet and len(coalSet) > 0 and coalescentRate > 0:
-            coalDistance = min(self.randomState.exponential(scale=1.0 / coalescentRate, size=len(coalSet)))
+        if coalSet and len(coalSet) > 1 and unitCoalescentRate > 0:
+            coalescentRate  = self.binom(len(coalSet), 2)*unitCoalescentRate
+            coalDistance = self.randomState.exponential(scale=1.0 / coalescentRate)
         else:
             coalDistance = float('inf')
-        if recomSet and len(recomSet) > 0 and recombinationRate > 0:
-            recomDistance = min(self.randomState.exponential(scale=1.0/recombinationRate, size=len(recomSet)))
+        if recomSet and len(recomSet) > 1 and unitRecombinationRate > 0:
+            recombinationRate = self.binom(len(recomSet), 2)*unitRecombinationRate
+            recomDistance = self.randomState.exponential(scale=1.0/recombinationRate)
         else:
             recomDistance = float('inf')
         if coalDistance < min(recomDistance, distance):
@@ -436,22 +447,45 @@ class LocusTree(SpeciesTree):
     
     """
     def __speciesBranchRecurse(self, nodeId, branchLength, coalescentProcess, 
-        copiedHaplotypeTree, fromSet, coalSet, recomSet):
+        copiedHaplotypeTree, fromSet, coalSet, recomSet, distanceAboveRoot=None):
         withinBranchProcess = copiedHaplotypeTree[nodeId]
         distanceToAdd = 0
         tempFromSet = fromSet.copy()
         toSet = fromSet.copy()
-
-        if withinBranchProcess:
-            for i in range(len(withinBranchProcess)):
-                copiedProcess = withinBranchProcess[i]
-                distance = withinBranchProcess[i]['distance']
-                toSet, coalSet, recomSet, _ = \
-                    self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
-                    distanceToAdd=distanceToAdd, fromSet=tempFromSet,
-                    coalescentProcess=coalescentProcess,
-                    coalSet=coalSet, recomSet=recomSet, 
-                    copiedProcess=copiedProcess)
-                tempFromSet = toSet.copy()
+        if distanceAboveRoot:
+            accumulatedDistance = 0
+            if withinBranchProcess:
+                for i in range(len(withinBranchProcess)):
+                    copiedProcess = withinBranchProcess[i]
+                    distance = withinBranchProcess[i]['distance']
+                    tempDistance = accumulatedDistance
+                    accumulatedDistance += distance
+                    if accumulatedDistance < distanceAboveRoot:
+                        toSet, coalSet, recomSet, _ = \
+                            self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
+                            distanceToAdd=distanceToAdd, fromSet=tempFromSet,
+                            coalescentProcess=coalescentProcess,
+                            coalSet=coalSet, recomSet=recomSet, 
+                            copiedProcess=copiedProcess)
+                        tempFromSet = toSet.copy()
+                    else:
+                        coalescentProcess[nodeId].append({
+                            'fromSet': tempFromSet,
+                            'toSet': None,
+                            'distance': distanceAboveRoot - tempDistance
+                        })
+                        break
+        else:
+            if withinBranchProcess:
+                for i in range(len(withinBranchProcess)):
+                    copiedProcess = withinBranchProcess[i]
+                    distance = withinBranchProcess[i]['distance']
+                    toSet, coalSet, recomSet, _ = \
+                        self.__geneBranchRecurse(nodeId=nodeId, distance=distance,
+                        distanceToAdd=distanceToAdd, fromSet=tempFromSet,
+                        coalescentProcess=coalescentProcess,
+                        coalSet=coalSet, recomSet=recomSet, 
+                        copiedProcess=copiedProcess)
+                    tempFromSet = toSet.copy()
 
         return toSet, coalSet, recomSet

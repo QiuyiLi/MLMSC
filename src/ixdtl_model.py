@@ -145,7 +145,7 @@ class IxDTLModel:
         else:
             print('distances from tips to root:')
             for node in geneSkbioTreeTruncated.tips():	
-                    print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
+                print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
             print('gene tree:')
             print(geneSkbioTreeTruncated.ascii_art())
             print('gene tree table:')
@@ -157,6 +157,7 @@ class IxDTLModel:
         f = open('./output/gene_tree_full.newick','w')
         f.write(str(geneSkbioTree))
         f.close()
+
 
         f = open('./output/gene_tree_truncated.newick','w')
         f.write(str(geneSkbioTreeTruncated))

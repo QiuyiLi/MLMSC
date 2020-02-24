@@ -123,6 +123,12 @@ class TreeTable:
             leaveNode = node
             break
         self.__treeHeight = skbioTree.distance(leaveNode)
+        if skbioTree.distance(leaveNode) != self.__distanceToRoot(self.leaves[0].id):
+            print('!'*80)
+            print(skbioTree.distance(leaveNode), self.__distanceToRoot(self.leaves[0].id))
+            print(skbioTree.root().name)
+            print(self.root.name)
+        # self.__treeHeight = self.__distanceToRoot(self.leaves[0].id)
         self.__skbioTree = skbioTree
 
     @property
@@ -258,6 +264,19 @@ class TreeTable:
             entry.fakeId = index
             index += 1
 
+    # def __distanceToRoot(self, nodeId):
+    #     """
+    #     find the distance of a given node to the root 
+    #     needed when finding the walking distance
+    #     """
+    #     if (self.getEntryById(nodeId).parent < 0 or 
+    #         nodeId == self.root.id):
+    #         return 0
+    #     else:
+    #         distanceToParent = self.getEntryById(nodeId).distanceToParent
+    #         parent = self.getEntryById(nodeId).parent
+    #         return distanceToParent + self.__distanceToRoot(parent)
+
     def __distanceToRoot(self, nodeId):
         """
         find the distance of a given node to the root 
@@ -271,15 +290,24 @@ class TreeTable:
             parent = self.getEntryById(nodeId).parent
             return distanceToParent + self.__distanceToRoot(parent)
 
-    def distanceToLeaf(self, nodeId, branchDistance):
+    def distanceToLeaf(self, nodeId, branchDistance=0):
         """
         given a coalescent event happening at "branchDistance" above 
         a speices node with "nodeId" find the distance of this event 
         to the bottom of the tree needed when assigning ids to the 
         coalescent tree
         """
-        distance = branchDistance + (self.treeHeight - self.__distanceToRoot(nodeId))
+        # print(self.table)
+        # if self.getEntryById(nodeId).children:
+        #     distanceToChild0 = self.getEntryById(nodeId).distanceToChildren[0]
+        #     child0 = self.getEntryById(nodeId).children[0]
+        #     return distanceToChild0 + self.distanceToLeaf(child0)
+        # else:
+        #     return 0
+
+        distance = branchDistance + (self.__distanceToRoot(self.leaves[0].id) - self.__distanceToRoot(nodeId))
         if distance < 0:
             distance = 0
-
         return distance
+
+        
