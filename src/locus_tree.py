@@ -67,7 +67,7 @@ class LocusTree(SpeciesTree):
     """
     
     """
-    def __filteredCoalescentWithRecombinationProcess(self, coalescentProcess, cladeSetIntoRoot):
+    def __filteredLinkedCoalescentProcess(self, coalescentProcess, cladeSetIntoRoot):
         filteredProcess = defaultdict(list)
         filteredClades = []
         for speciesNodeId, mergingSets in coalescentProcess.items():
@@ -108,7 +108,7 @@ class LocusTree(SpeciesTree):
     """
     
     """
-    def coalescentWithRecombination(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
+    def linkedCoalescent(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
         nodes = self.getNodes()
         root = self.getRoot()
         coalescentProcess = defaultdict(list)
@@ -242,7 +242,7 @@ class LocusTree(SpeciesTree):
             geneNodeName, chosenGeneName, _ = self.__getBipartition(chosenGeneName)
         chosenGeneName = self.__starReplace(chosenGeneName)
 
-        filteredProcess, filteredClades = self.__filteredCoalescentWithRecombinationProcess(
+        filteredProcess, filteredClades = self.__filteredLinkedCoalescentProcess(
             coalescentProcess, cladeSetIntoRoot)
 
         fullProcess = filteredProcess
@@ -383,7 +383,7 @@ class LocusTree(SpeciesTree):
             return toSet, coalSet, recomSet, distanceToAdd
 
     """
-    utility functions for coalescentWithRecombination
+    utility functions for linkedCoalescent
     """
     def __starReplace(self, string):
         newString = ''

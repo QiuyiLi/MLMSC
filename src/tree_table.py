@@ -123,11 +123,6 @@ class TreeTable:
             leaveNode = node
             break
         self.__treeHeight = skbioTree.distance(leaveNode)
-        if skbioTree.distance(leaveNode) != self.__distanceToRoot(self.leaves[0].id):
-            print('!'*80)
-            print(skbioTree.distance(leaveNode), self.__distanceToRoot(self.leaves[0].id))
-            print(skbioTree.root().name)
-            print(self.root.name)
         # self.__treeHeight = self.__distanceToRoot(self.leaves[0].id)
         self.__skbioTree = skbioTree
 
@@ -297,17 +292,16 @@ class TreeTable:
         to the bottom of the tree needed when assigning ids to the 
         coalescent tree
         """
-        # print(self.table)
-        # if self.getEntryById(nodeId).children:
-        #     distanceToChild0 = self.getEntryById(nodeId).distanceToChildren[0]
-        #     child0 = self.getEntryById(nodeId).children[0]
-        #     return distanceToChild0 + self.distanceToLeaf(child0)
-        # else:
-        #     return 0
+        if self.getEntryById(nodeId).children:
+            distanceToChild0 = self.getEntryById(nodeId).distanceToChildren[0]
+            child0 = self.getEntryById(nodeId).children[0]
+            return distanceToChild0 + self.distanceToLeaf(child0, branchDistance=branchDistance)
+        else:
+            return branchDistance
 
-        distance = branchDistance + (self.__distanceToRoot(self.leaves[0].id) - self.__distanceToRoot(nodeId))
-        if distance < 0:
-            distance = 0
-        return distance
+        # distance = branchDistance + (self.__distanceToRoot(self.leaves[0].id) - self.__distanceToRoot(nodeId))
+        # if distance < 0:
+        #     distance = 0
+        # return distance
 
         

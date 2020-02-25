@@ -82,20 +82,6 @@ class SpeciesTree:
     def getDistanceToLeaf(self, nodeId, branchDistance=0):
         return self.__treeTable.distanceToLeaf(nodeId, branchDistance)
 
-    # def getDistanceToLeaf(self, nodeId, branchDistance=0):
-    #     """
-    #     given a coalescent event happening at "branchDistance" above 
-    #     a speices node with "nodeId" find the distance of this event 
-    #     to the bottom of the tree needed when assigning ids to the 
-    #     coalescent tree
-    #     """
-    #     if self.getNodeById(nodeId).children:
-    #         distanceToChild0 = self.getNodeById(nodeId).distanceToChildren[0]
-    #         child0 = self.getNodeById(nodeId).children[0]
-    #         return distanceToChild0 + self.getDistanceToLeaf(child0)
-    #     else:
-    #         return 0
-
     def initialize(self, path):
         self.__treeTable = TreeTable()
         self.__treeTable.createFromNewickFile(path)
@@ -280,14 +266,6 @@ class SpeciesTree:
                     toSet = fromSet.copy()
                     return toSet         
 
-    def __getCoalescentRateInAncestralBranch(self, cladeSet):
-        indices = []
-        for clade in cladeSet:
-            splited = clade.split('*')[:-1]
-            for index in splited:
-                indices.append(int(index))
-        return mean(self.coalescentRate[indices])
-
     def _starInSet(self, target, clade):
         """
         checking whether a given clade is in the target set
@@ -382,10 +360,16 @@ class SpeciesTree:
         """
         pass
 
-
-
-
-
+    """
+    unsed function
+    """
+    def __getCoalescentRateInAncestralBranch(self, cladeSet):
+        indices = []
+        for clade in cladeSet:
+            splited = clade.split('*')[:-1]
+            for index in splited:
+                indices.append(int(index))
+        return mean(self.coalescentRate[indices])
 
 
         
