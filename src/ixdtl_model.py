@@ -99,7 +99,6 @@ class IxDTLModel:
         # cut the tree 
         geneTreeTruncated = geneTree
         geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
-
         
         # cut tree at losses
         geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
@@ -109,16 +108,30 @@ class IxDTLModel:
                     lambda x: x.name == node.name)
         geneSkbioTreeTruncated.prune()
         if not geneSkbioTreeTruncated:
-                print('Exception: ALL LOST')
-                # save newick to file
-                f = open('./output/gene_tree_full.newick','w')
-                f.write(str(geneSkbioTree))
-                f.close()
+            print('Exception: ALL LOST')
+            # save newick to file
+            f = open('./output/gene_tree_untruncated.newick','w')
+            f.write(str(geneSkbioTree))
+            f.close()
 
-                f = open('./output/gene_tree_truncated.newick','w')
-                f.write('')
-                f.close()
-                return
+            f = open('./output/gene_tree_truncated.newick','w')
+            f.write('')
+            f.close()
+
+            f = open('./output/gene_tree_cleaned.newick','w')
+            f.write('')
+            f.close()
+            return
+
+        geneSkbioTreeCleaned = geneSkbioTreeTruncated.deepcopy()
+        for node in geneSkbioTreeCleaned.traverse():
+            if node in geneSkbioTreeCleaned.tips():
+                speciesId = int(node.name.split('*')[0])
+                remainder = node.name.split('*')[1]
+                speciesNode = self.speciesTree.getNodeById(speciesId)
+                node.name = speciesNode.name + remainder
+            else:
+                node.name = ''
 
         # visualization
         if self.__parameters['verbose']:
@@ -144,23 +157,24 @@ class IxDTLModel:
         
         else:
             print('distances from tips to root:')
-            for node in geneSkbioTreeTruncated.tips():	
-                print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
+            for node in geneSkbioTreeCleaned.tips():	
+                print(str(geneSkbioTreeCleaned.distance(node)) + ' ' + str(node.name))
             print('gene tree:')
-            print(geneSkbioTreeTruncated.ascii_art())
-            print('gene tree table:')
-            geneTreeTruncated.readFromSkbioTree(skbioTree=geneSkbioTreeTruncated, rename=False)
-            print(geneTreeTruncated)
+            # print(geneSkbioTreeTruncated.ascii_art())
+            print(geneSkbioTreeCleaned.ascii_art())
 
                 
         # save newick to file
-        f = open('./output/gene_tree_full.newick','w')
+        f = open('./output/gene_tree_untruncated.newick','w')
         f.write(str(geneSkbioTree))
         f.close()
 
-
         f = open('./output/gene_tree_truncated.newick','w')
         f.write(str(geneSkbioTreeTruncated))
+        f.close()
+
+        f = open('./output/gene_tree_cleaned.newick','w')
+        f.write(str(geneSkbioTreeCleaned))
         f.close()
         
     def cutTree(self, untruncatedGeneTree):
