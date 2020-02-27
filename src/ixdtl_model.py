@@ -174,8 +174,14 @@ class IxDTLModel:
         f.close()
 
         f = open('./output/gene_tree_cleaned.newick','w')
-        f.write(str(geneSkbioTreeCleaned))
+        string = str(geneSkbioTreeCleaned)
+        for char in string:
+            if char == "'":
+                continue
+            else:
+                f.write(char)
         f.close()
+
         
     def cutTree(self, untruncatedGeneTree):
         root = untruncatedGeneTree.root()
