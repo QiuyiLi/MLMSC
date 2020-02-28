@@ -1,14 +1,32 @@
-# IxDTL Simulator
+# MLMSC Simulator
 
-IxDTL simulates the gene family evolution within a species tree, that accounts for population-level processes (resulting in incomplete lineage sorting), and gene duplications, transfers,and losses. 
+MLMSC Simulator is a program for the simulation of gene family evolution within a species tree based on the Multilocus Multipecies Coalescent (MLMSC) model. MLMSC model generalises the multispecies coalescent to gene families, and is designed to capture all possible scenarios that can arise through ILS, gene duplication, transfer and loss, and any interaction between these processes. The MLMSC combines forward- and backward-in-time modelling in order to properly account for copy number hemiplasy and linkage between loci. 
+The input for MLMSC Simulator are the simulation parameter values and a pre-specified species tree in Newick format as an input file. The output is a simulated gene tree in Newick format.
 
-## Getting Started
+## Obtaining MLMSC Simulator
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+### Download
 
-### Prerequisites
+The source code of MLMSC Simulator is available in the GitHub repository: 
+```
+https://github.com/QiuyiLi/MLMSC
+```
+You can clone the sources in your computer executing 
+```
+git clone https://github.com/QiuyiLi/MLMSC.git
+```
 
-python3
+### Installing the requirements
+MLMSC Simulator is built under Python 3.7.2 and requirs the installation of the following packages: 
+scikit-bio,
+numpy,
+statistics.
+You can install the packages executing 
+```
+pip install -r requirements.txt
+```
+
+
 
 ## Installing and testing
 
