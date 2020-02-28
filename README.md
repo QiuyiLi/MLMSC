@@ -11,26 +11,59 @@ The source code of MLMSC Simulator is available in the GitHub repository:
 ```
 https://github.com/QiuyiLi/MLMSC
 ```
-You can clone the sources in your computer executing 
+You can clone the sources in your computer by executing 
 ```
 git clone https://github.com/QiuyiLi/MLMSC.git
 ```
 
 ### Installing the requirements
 MLMSC Simulator is built under Python 3.7.2 and requirs the installation of the following packages: 
-scikit-bio,
-numpy,
-statistics.
-You can install the packages executing 
+```
+scikit-bio
+numpy
+statistics
+```
+You can install these packages by executing 
 ```
 pip install -r requirements.txt
 ```
+### Testing
 
-
-
-## Installing and testing
-
-Explain how to run the automated tests for this system
+The MLMSC Simulator should be ready to use. You can test the the simulator by executing
+```
+python3 MLMSC.py -i data/tree_sample_0.txt -s 2020
+```
+The simulator will run with the default setting and you should be able to see the following outputs:
+```
+distances from tips to root:
+5.756047507674668 A
+5.756047507674668 A_lv=0_id=2
+5.756047507674668 A_lv=1_id=0_lv=0_id=2
+5.756047507674668 C_lv=1_id=0_lv=0_id=0
+5.756047507674668 C_lv=0_id=5
+5.756047507674668 A_lv=0_id=1
+5.756047507674668 B_lv=0_id=4
+5.756047507674668 D
+5.756047507674668 D_lv=0_id=3
+gene tree:
+                                                  /-A
+                                        /--------|
+                                       |         |          /-A_lv=0_id=2
+                              /--------|          \--------|
+                             |         |                    \-A_lv=1_id=0_lv=0_id=2
+                    /--------|         |
+                   |         |          \-C_lv=1_id=0_lv=0_id=0
+                   |         |
+          /--------|          \-C_lv=0_id=5
+         |         |
+         |         |          /-A_lv=0_id=1
+---------|          \--------|
+         |                    \-B_lv=0_id=4
+         |
+         |          /-D
+          \--------|
+                    \-D_lv=0_id=3
+```
 
 ### Break down into end to end tests
 
