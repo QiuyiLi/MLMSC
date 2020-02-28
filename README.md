@@ -89,7 +89,7 @@ Give an example
 ## Authors
 
 * **Qiuyi Li** - *Initial work*
-
+* **Geoffery Law**
 See also the list of [contributors](https://github.com/QiuyiLi/MLMSC/graphs/contributors) who participated in this project.
 
 ## License
