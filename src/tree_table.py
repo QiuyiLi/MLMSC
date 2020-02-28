@@ -1,5 +1,5 @@
 import skbio
-from .util import *
+from .utility import *
 
 
 class TreeTableEntry:

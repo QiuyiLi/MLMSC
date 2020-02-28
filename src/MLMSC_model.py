@@ -3,7 +3,7 @@ from .species_tree import *
 from .haplotype_tree import *
 from .exception import *
 
-class IxDTLModel:
+class MLMSC_Model:
     def __init__(self, seed=None):
         if seed == None:
             self.__randomState = np.random.RandomState()
@@ -211,35 +211,35 @@ class IxDTLModel:
     def setParameters(self, coalescent, recombination, duplication, transfer, loss, 
         hemiplasy, unlink, verbose):
         if not coalescent:
-            raise IxDTLError('missing coalescent parameter')
+            raise MLMSC_Error('missing coalescent parameter')
         self.__parameters['coalescent'] = coalescent
 
         if recombination is None:
-            raise IxDTLError('missing recombination parameter')
+            raise MLMSC_Error('missing recombination parameter')
         self.__parameters['recombination'] = recombination
 
         if duplication is None:
-            raise IxDTLError('missing duplication parameter')
+            raise MLMSC_Error('missing duplication parameter')
         self.__parameters['duplication'] = duplication
 
         if transfer is None:
-            raise IxDTLError('missing transfer parameter')
+            raise MLMSC_Error('missing transfer parameter')
         self.__parameters['transfer'] = transfer
 
         if loss is None:
-            raise IxDTLError('missing loss parameter')
+            raise MLMSC_Error('missing loss parameter')
         self.__parameters['loss'] = loss
 
         if unlink is None:
-            raise IxDTLError('missing unlink option')
+            raise MLMSC_Error('missing unlink option')
         self.__parameters['unlink'] = unlink
 
         if hemiplasy is None:
-            raise IxDTLError('missing hemiplasy option')
+            raise MLMSC_Error('missing hemiplasy option')
         self.__parameters['hemiplasy'] = hemiplasy
 
         if verbose is None:
-            raise IxDTLError('missing verbose option')
+            raise MLMSC_Error('missing verbose option')
         self.__parameters['verbose'] = verbose
 
     def readSpeciesTree(self, path):

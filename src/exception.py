@@ -1,2 +1,2 @@
-class IxDTLError(Exception):
+class MLMSC_Error(Exception):
     pass

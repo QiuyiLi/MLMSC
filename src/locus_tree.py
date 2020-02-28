@@ -20,7 +20,7 @@ class LocusTree(SpeciesTree):
         else:
             return self.boundedCoalescent(distanceAboveRoot)
 
-    # incomplete coalescent for IxDTL
+    # incomplete coalescent for MLMSC
     def incompleteCoalescent(self, distanceAboveRoot):
         fullCoalescentProcess, genesIntoRoot = self.coalescent(distanceAboveRoot)
         chosenGene = self.randomState.choice(genesIntoRoot)

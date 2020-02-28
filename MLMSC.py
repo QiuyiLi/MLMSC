@@ -1,5 +1,5 @@
 import sys
-from src.ixdtl_model import *
+from src.MLMSC_model import *
 
 
 def default(str):
@@ -20,15 +20,15 @@ def default(str):
 
 def readCommand(argv):
     """
-    Processes the command used to run IxDTLModel from the command line.
+    Processes the command used to run MLMSC_Model from the command line.
     """
     from optparse import OptionParser
     usageStr = """
-    USAGE:      python ixdtl.py <options>
-    EXAMPLES:   (1) python ixdtl.py
+    USAGE:      python MLMSC.py <options>
+    EXAMPLES:   (1) python MLMSC.py
                     - runs a model
-                (2) python ixdtl.py --input data/species_tree.txt
-                OR  python ixdtl.py -i data/species_tree.txt
+                (2) python MLMSC.py --input data/species_tree.txt
+                OR  python MLMSC.py -i data/species_tree.txt
     """
     parser = OptionParser(usageStr, add_help_option=False)
 
@@ -58,7 +58,7 @@ def readCommand(argv):
         '-r', '--recombinationRate', type='float', dest='recombinationArgs',
         help=default(
             'the unit rate of recombination'
-            'e.g., "-c 0.5"'),
+            'e.g., "-r 0.5"'),
         default=0.5)
 
     parser.add_option(
@@ -134,22 +134,22 @@ def readCommand(argv):
 
 
 def runModel(**args):
-    model = IxDTLModel(seed=args['seedArgs'])
+    model = MLMSC_Model(seed=args['seedArgs'])
     model.run(**args)
 
 
 if __name__ == '__main__':
     """
-    The ixdtl function called when ixdtl.py is run
+    The MLMSC function called when MLMSC.py is run
     from the command line:
 
-    > python ixdtl.py
+    > python MLMSC.py
 
     See the usage string for more details.
 
-    > python ixdtl.py --help
+    > python MLMSC.py --help
     """
-    args= readCommand(sys.argv[1:])  # Get ixdtl components based on input
+    args= readCommand(sys.argv[1:])  # Get MLMSC components based on input
     runModel(**args)
 
     pass
