@@ -54,7 +54,6 @@ gene tree:
          |          \-D_lv=0_id=0
          |
           \-D
-qiuyidembp:IxDTL2.0 qiuyi_li$ 
 
 ```
 
