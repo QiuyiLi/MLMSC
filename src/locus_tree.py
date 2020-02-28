@@ -1,6 +1,5 @@
 from .species_tree import *
 from .tree_table import *
-import pprint
 
 class LocusTree(SpeciesTree):
 

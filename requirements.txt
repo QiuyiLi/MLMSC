@@ -1,2 +1,3 @@
 scikit-bio
 numpy
+statistics

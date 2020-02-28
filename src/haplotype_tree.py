@@ -822,8 +822,6 @@ class HaplotypeTree:
         return haplotypeTree
 
     def __addNewLociRecurse(self, event, newLocusRootId, distanceAboveRoot, level):
-        # print('='*40)
-        # pprint.pprint(event)
         copiedFullProcess = self.fullCoalescentProcess
 
         if (event['type'] == 'duplication' or event['type'] == 'transfer'): 

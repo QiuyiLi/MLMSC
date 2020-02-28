@@ -1,9 +1,7 @@
 import numpy as np
-import pprint
 from .species_tree import *
 from .haplotype_tree import *
 from .exception import *
-
 
 class IxDTLModel:
     def __init__(self, seed=None):
