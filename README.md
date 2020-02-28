@@ -31,38 +31,31 @@ pip install -r requirements.txt
 
 The MLMSC Simulator should be ready to use. You can test the the simulator by executing
 ```
-python3 MLMSC.py -i data/tree_sample_0.txt -s 2020
+python3 MLMSC.py -i data/tree_sample_0.txt -s 2020210
 ```
 The simulator will run with the default setting and you should be able to see the following outputs:
 ```
 distances from tips to root:
-5.756047507674668 A
-5.756047507674668 A_lv=0_id=2
-5.756047507674668 A_lv=1_id=0_lv=0_id=2
-5.756047507674668 C_lv=1_id=0_lv=0_id=0
-5.756047507674668 C_lv=0_id=5
-5.756047507674668 A_lv=0_id=1
-5.756047507674668 B_lv=0_id=4
-5.756047507674668 D
-5.756047507674668 D_lv=0_id=3
+5.992582775227923 A_lv=0_id=3
+5.992582775227923 A
+5.992582775227923 A_lv=0_id=1
+5.992582775227923 A_lv=0_id=2
+5.992582775227923 D_lv=0_id=0
+5.992582775227923 D
 gene tree:
-                                                  /-A
-                                        /--------|
-                                       |         |          /-A_lv=0_id=2
-                              /--------|          \--------|
-                             |         |                    \-A_lv=1_id=0_lv=0_id=2
-                    /--------|         |
-                   |         |          \-C_lv=1_id=0_lv=0_id=0
-                   |         |
-          /--------|          \-C_lv=0_id=5
-         |         |
-         |         |          /-A_lv=0_id=1
----------|          \--------|
-         |                    \-B_lv=0_id=4
+                                        /-A_lv=0_id=3
+                              /--------|
+                             |         |          /-A
+                    /--------|          \--------|
+                   |         |                    \-A_lv=0_id=1
+          /--------|         |
+         |         |          \-A_lv=0_id=2
+---------|         |
+         |          \-D_lv=0_id=0
          |
-         |          /-D
-          \--------|
-                    \-D_lv=0_id=3
+          \-D
+qiuyidembp:IxDTL2.0 qiuyi_li$ 
+
 ```
 
 ##  Usage
