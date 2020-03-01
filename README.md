@@ -107,17 +107,20 @@ e.g., python3 MLMSC.py -i data/tree_sample_0.txt -h False
 e.g., python3 MLMSC.py -i data/tree_sample_0.txt -v True
 ```
 
-* Seed number: -s or --seed; set seed for reproducablility, default -s None (ramdon).
+* Seed number: -s or --seed; set seed for reproduciblility, default -s None (ramdon).
 ```
 e.g., python3 MLMSC.py -i data/tree_sample_0.txt -s 0
 ```
+
+
+### Command line outputs
+* distances from tips to root:
+* gene tree:
   
 ### Output files
-*
-*
-*
-
-### Other outputs
+* gene_tree_untruncated: intermediate output for debugging purposes, 
+* gene_tree_truncated: intermediate output for debugging purposes,
+* gene_tree_cleaned: final output for the end users, 
 
 ```
 Give an example
