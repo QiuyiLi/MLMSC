@@ -1,6 +1,6 @@
 # MLMSC Simulator
 
-MLMSC Simulator is a program for the simulation of gene family evolution within a species tree based on the Multilocus Multipecies Coalescent (MLMSC) model. MLMSC model generalises the multispecies coalescent to gene families, and is designed to capture all possible scenarios that can arise through ILS, gene duplication, transfer and loss, and any interaction between these processes. The MLMSC combines forward- and backward-in-time modelling in order to properly account for copy number hemiplasy and linkage between loci. 
+MLMSC Simulator is a program for the simulation of gene family evolution within a species tree based on the Multilocus Multipecies Coalescent (MLMSC) model. MLMSC model generalises the multispecies coalescent to gene families, and is designed to capture all possible scenarios that can arise through incomplete lineage sorting, gene duplication, transfer and loss, and any interaction between these processes. The MLMSC combines forward- and backward-in-time modelling in order to properly account for copy number hemiplasy and linkage between loci. 
 The input for MLMSC Simulator are the simulation parameter values and a pre-specified species tree in Newick format as an input file. The output is a simulated gene tree in Newick format.
 
 ## Obtaining MLMSC Simulator
@@ -16,7 +16,7 @@ You can clone the sources in your computer by executing
 git clone https://github.com/QiuyiLi/MLMSC.git
 ```
 
-### Installing the requirements
+### Requirements
 MLMSC Simulator is built under Python 3.7.2 and requirs the installation of the following packages: 
 ```
 scikit-bio
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 ### Testing
 
-The MLMSC Simulator should be ready to use. You can test the the simulator by executing
+The MLMSC Simulator should be ready to use now. You can test the the simulator by executing
 ```
 python3 MLMSC.py -i data/tree_sample_0.txt -s 2020210
 ```
@@ -59,11 +59,63 @@ gene tree:
 
 ##  Usage
 
-### Input file: species_tree.newick
+### Input file
+* Species tree: -i or --inputFile; the prespecified species tree written in [Newick](https://en.wikipedia.org/wiki/Newick_format) format.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt
+```
 
 ### Input parameters
 
+* Coalescent rate: -c or --coalescentRate; the coalesent rate in multispecies coalescent, default: -c 1.0.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -c 0.5
+```
+  
+* Recombination rate: -r or --recombinationRate; the recombiantion rate in linked coalescent, default: -r 0.5.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -r 0.5
+```
+  
+* Duplication rate: -d or --dulpicationRate; occurrence rate of gene duplication, default: -d 0.2.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -d 0.5
+```
+  
+* Transfer rate; -t or --transferRate; occurrence rate of horizontal gene transfer, default: -t 0.1.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -t 0.5
+```
+  
+* Loss rate; -l or --lossRate; occurrence rate of gene loss, default: -l 0.2.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -l 0.5
+```
+  
+* Unlink probability; -u or --unlinkProb; the probability that a duplication is unlinked, default: -u 0.5.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -u 0.5
+```
+  
+* Hemiplasy option: -h or --hemiplasy; whether or not the copy number hemiplasy is allowed, default: -h True.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -h False
+```
+  
+* Verbose option: -v or --verbose; detailed outputs for debugging purposes, default: -v False.
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -v True
+```
+
+* Seed number: -s or --seed; set seed for reproducablility, default -s None (ramdon).
+```
+e.g., python3 MLMSC.py -i data/tree_sample_0.txt -s 0
+```
+  
 ### Output files
+*
+*
+*
 
 ### Other outputs
 
@@ -94,52 +146,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Hat tip to anyone whose code was used
 * Inspiration
 * etc
-
-
-
-
-
-
-
-To run, type: 
-
-python3 ixdtl.py -i data/tree_sample_0.txt
-
-the code will then run with default settings, if you want to change parameters by yourself:
-
--c coalescent rate			e.g. -c 0.5 (default)
-  
--r recombination        e.g. -r 0.5 (no need to use under current version)
-  
--d duplication rate     e.g. -d 0.2 (default)
-  
--t transfer rate      	e.g. -t 0 (default)
-  
--l loss rate      			e.g. -l 0.1 (default)
-  
--u unlink probability 	e.g. -u 0.8 (no need to use under current version)
-  
--h hemiplasy option 		e.g. -h True (default)
-  
--v verbose option 			e.g. -v False (defalt)
-  
-For more options, check ixdtl.py
-
-
-Suggested order of reading:
-
-speciesTree.py
-
-haplotypeTree.py & locusTree.py
-
-ixdtl_model.py
-
-
-Tree structure:
-
-tree_table.py
-
-
-Input options:
-
-ixdtl.py
