@@ -3,7 +3,7 @@
 MLMSC Simulator is a program for the simulation of gene family evolution within a species tree based on the Multilocus Multipecies Coalescent (MLMSC) model. MLMSC model generalises the multispecies coalescent to gene families, and is designed to capture all possible scenarios that can arise through incomplete lineage sorting, gene duplication, transfer and loss, and any interaction between these processes. The MLMSC combines forward- and backward-in-time modelling in order to properly account for copy number hemiplasy and linkage between loci. 
 The input for MLMSC Simulator are the simulation parameter values and a pre-specified species tree in Newick format as an input file. The output is a simulated gene tree in Newick format.
 
-## Obtaining MLMSC Simulator
+## Obtaining the program
 
 ### Download
 
@@ -114,21 +114,14 @@ e.g., python3 MLMSC.py -i data/tree_sample_0.txt -s 0
 
 
 ### Command line outputs
-* distances from tips to root:
-* gene tree:
+* distances from tips to root: for each leaf of the final gene tree, the distance from the leaf to the root of the gene tree is calculated. These distances should be equal to ensure time consistency.
+* gene tree: an ascii drawing of the gene tree as a first-stage visualization, which does not cover the information of branch lengths. A much better visualization can be obtained by importing gene_tree.newick to many third party programs.
+* Exception: ALL LOST: all gene lineages are lost, hence there is not gene tree.
   
 ### Output files
-* gene_tree_untruncated: intermediate output for debugging purposes, 
-* gene_tree_truncated: intermediate output for debugging purposes,
-* gene_tree_cleaned: final output for the end users, 
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
+* gene_tree_untruncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree before cutted from the loss points.
+* gene_tree_truncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree after cutted from the loss points.
+* gene_tree_cleaned.newick: final output for the end users, the final gene with internal node names removed and leaf names converted according to the names of species.
 
 ```
 Give an example
