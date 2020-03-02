@@ -134,4 +134,4 @@ This project is licensed under the GNU GPLv3 - see [LICENSE.md](LICENSE.md) for 
 
 ## Acknowledgments
 
-QL would like to thank Yao-ban Chan, Yupei You, Yichi Zhang, and Yiling Cao for helpful comments and assistance in  programming.
+QL would like to thank Yao-ban Chan, Yupei You, Yichi Zhang, and Yiling Cao for their undivided support and assistance。
