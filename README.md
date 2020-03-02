@@ -114,7 +114,6 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -n 10
 e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 ```
 
-
 ### Command line outputs
 * gene tree: an ascii drawing of the gene tree as a first-stage visualization, which does not cover the information of branch lengths. A much better visualization can be obtained by importing gene_tree.newick to many third party programs.
 * Exception: ALL LOST: all gene lineages are lost, hence there is not gene tree.
@@ -131,7 +130,7 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the GNU GPLv3 - see [LICENSE.md](LICENSE.md) for more details.
 
 ## Acknowledgments
 
