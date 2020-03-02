@@ -1,7 +1,7 @@
 # MLMSC Simulator
 
 MLMSC Simulator is a program for the simulation of gene family evolution within a species tree based on the Multilocus Multipecies Coalescent (MLMSC) model. MLMSC model generalises the multispecies coalescent to gene families, and is designed to capture all possible scenarios that can arise through incomplete lineage sorting, gene duplication, transfer and loss, and any interaction between these processes. The MLMSC combines forward- and backward-in-time modelling in order to properly account for copy number hemiplasy and linkage between loci. 
-The input for MLMSC Simulator are the simulation parameter values and a pre-specified species tree in Newick format as an input file. The output is a simulated gene tree in Newick format.
+The input for MLMSC Simulator are the simulation parameters and a pre-specified species tree in Newick format as an input file. The output is a simulated gene tree in Newick format.
 
 ## Citation
 If you use the MLMSC simulator, please cite:
@@ -12,11 +12,11 @@ If you use the MLMSC simulator, please cite:
 
 ### Download
 
-The source code of MLMSC Simulator is available in the GitHub repository: 
+The source code of MLMSC Simulator is available in the GitHub repository:
 ```
 https://github.com/QiuyiLi/MLMSC
 ```
-You can clone the sources in your computer by executing 
+You can clone the sources in your computer by executing:
 ```
 git clone https://github.com/QiuyiLi/MLMSC.git
 ```
@@ -28,13 +28,13 @@ scikit-bio
 numpy
 statistics
 ```
-You can install these packages by executing 
+You can install these packages by executing:
 ```
 pip install -r requirements.txt
 ```
 ### Testing
 
-The MLMSC Simulator should be ready to use now. You can test the the simulator by executing
+The MLMSC Simulator should be ready to use now. You can test the the simulator by executing:
 ```
 python3 MLMSC.py -i species_trees/species_tree_0.newick -s 2020210
 ```
@@ -116,7 +116,7 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 
 ### Command line outputs
 * gene tree: an ascii drawing of the gene tree as a first-stage visualization, which does not cover the information of branch lengths. A much better visualization can be obtained by importing gene_tree.newick to many third party programs.
-* Exception: ALL LOST: all gene lineages are lost, hence there is not gene tree.
+* Exception: ALL LOST: all gene lineages are lost, hence there is no gene tree generated.
   
 ### Output files
 * gene_tree_untruncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree before cutted from the loss points.
