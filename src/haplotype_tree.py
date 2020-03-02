@@ -489,6 +489,48 @@ class HaplotypeTree:
         else:
             return None, targetSpeciesId
 
+    def DTLprocess(self, event, rootLength, newLocusTree, newHaplotypeTree):
+        newHaplotypeTreeEvents = newHaplotypeTree.Lprocess(
+                event=event, distanceAboveRoot=rootLength)
+
+        coalescentTreeProcessD, _ = newLocusTree.coalescent(
+            distanceAboveRoot=float('inf'))
+        coalescentTreeD = HaplotypeTree(
+            randomState=self.randomState, speciesTree=self.speciesTree, locusTree=newLocusTree)
+        coalescentTreeD.initialize(
+            locusTree=newLocusTree, 
+            coalescentProcess=coalescentTreeProcessD, 
+            fullCoalescentProcess=coalescentTreeProcessD,
+            rename=False)
+        coalescentTreeD.parameters = self.parameters
+        rootLength = max(0, event['eventHeight'] - coalescentTreeD.getTreeHeight())
+        threshold = event['eventHeight']
+        newCoalescentTreeEventsD = coalescentTreeD.Dprocess(
+            distanceAboveRoot=rootLength, threshold=threshold, event=event)
+
+        coalescentTreeProcessT, _ = self.speciesTree.coalescent(
+            distanceAboveRoot=float('inf'))
+        coalescentTreeT = HaplotypeTree(
+            randomState=self.randomState, speciesTree=self.speciesTree, locusTree=newLocusTree)
+        coalescentTreeT.initialize(
+            locusTree=newLocusTree, 
+            coalescentProcess=coalescentTreeProcessT, 
+            fullCoalescentProcess=coalescentTreeProcessT,
+            rename=False,
+            event = 'transfer')
+        coalescentTreeT.parameters = self.parameters
+        rootLength = max(0, event['eventHeight'] - coalescentTreeT.getTreeHeight())
+        threshold = event['eventHeight']
+        newCoalescentTreeEventsT = coalescentTreeT.Tprocess(
+            distanceAboveRoot=rootLength, threshold=threshold, event=event)
+
+        # newEvents = newHaplotypeTreeEvents + newCoalescentTreeEvents
+        # newEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
+        newCoalescentTreeEvents = newCoalescentTreeEventsD + newCoalescentTreeEventsT
+        newCoalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
+        newEvents = newCoalescentTreeEvents + newHaplotypeTreeEvents
+        return newEvents
+    
     def binom(self, n, k):
         return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
 
@@ -638,12 +680,12 @@ class HaplotypeTree:
                     if ancestral:
                         eventIndex = eventIndex + 1
                         for node in newHaplotypeTree.getSkbioTree().traverse():
-                            node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                            node.name = node.name + '_locus' + str(level) + '_event' + str(eventIndex)
                         geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
                         geneNodeParent = geneNode.parent
                         # 1. create new node
                         newNode = skbio.tree.TreeNode()
-                        newNode.name = 'd' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                        newNode.name = 'd' + '_locus' + str(level) + '_event' + str(eventIndex)
                         # 2. change length
                         newHaplotypeTree.getSkbioTree().root().length = \
                             event['eventHeight'] - newHaplotypeTree.getTreeHeight()
@@ -701,12 +743,12 @@ class HaplotypeTree:
                             eventIndex = eventIndex + 1
                             
                             for node in newHaplotypeTree.getSkbioTree().traverse():
-                                node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                                node.name = node.name + '_locus' + str(level) + '_event' + str(eventIndex)
                             geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
                             geneNodeParent = geneNode.parent
                             # 1. create new node
                             newNode = skbio.tree.TreeNode()
-                            newNode.name = 'd' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                            newNode.name = 'd' + '_locus' + str(level) + '_event' + str(eventIndex)
                             # 2. change length
                             newHaplotypeTree.getSkbioTree().root().length = \
                                 event['eventHeight'] - newHaplotypeTree.getTreeHeight() + branchLength
@@ -773,12 +815,12 @@ class HaplotypeTree:
                     if geneNodeName:
                         eventIndex = eventIndex + 1
                         for node in newHaplotypeTree.getSkbioTree().traverse():
-                            node.name = node.name + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                            node.name = node.name + '_locus' + str(level) + '_event' + str(eventIndex)
                         geneNode = haplotypeTree.getSkbioTree().find(geneNodeName)
                         geneNodeParent = geneNode.parent
                         # 1. create new node
                         newNode = skbio.tree.TreeNode()
-                        newNode.name = 't' + '_lv=' + str(level) + '_id=' + str(eventIndex)
+                        newNode.name = 't' + '_locus' + str(level) + '_event' + str(eventIndex)
                         # 2. change length
                         newHaplotypeTree.getSkbioTree().root().length = \
                             event['eventHeight'] - newHaplotypeTree.getTreeHeight() + branchLength
@@ -881,51 +923,14 @@ class HaplotypeTree:
                 rename=False)
             newHaplotypeTree.parameters = self.parameters
             rootLength = event['eventHeight'] - newHaplotypeTree.getTreeHeight()
-
             newHaplotypeTreeEvents = newHaplotypeTree.Lprocess(
                 event=event, distanceAboveRoot=rootLength)
-
-            # coalescentTreeProcess = None
-            coalescentTreeProcessD, _ = newLocusTree.coalescent(
-                distanceAboveRoot=float('inf'))
-            coalescentTreeD = HaplotypeTree(
-                randomState=self.randomState, speciesTree=self.speciesTree, locusTree=newLocusTree)
-            coalescentTreeD.initialize(
-                locusTree=newLocusTree, 
-                coalescentProcess=coalescentTreeProcessD, 
-                fullCoalescentProcess=coalescentTreeProcessD,
-                rename=False)
-            coalescentTreeD.parameters = self.parameters
-            rootLength = max(0, event['eventHeight'] - coalescentTreeD.getTreeHeight())
-            threshold = event['eventHeight']
-            newCoalescentTreeEventsD = coalescentTreeD.Dprocess(
-                distanceAboveRoot=rootLength, threshold=threshold, event=event)
-
-            coalescentTreeProcessT, _ = self.speciesTree.coalescent(
-                distanceAboveRoot=float('inf'))
-            coalescentTreeT = HaplotypeTree(
-                randomState=self.randomState, speciesTree=self.speciesTree, locusTree=newLocusTree)
-            coalescentTreeT.initialize(
-                locusTree=newLocusTree, 
-                coalescentProcess=coalescentTreeProcessT, 
-                fullCoalescentProcess=coalescentTreeProcessT,
-                rename=False,
-                event = 'transfer')
-            coalescentTreeT.parameters = self.parameters
-            rootLength = max(0, event['eventHeight'] - coalescentTreeT.getTreeHeight())
-            threshold = event['eventHeight']
-            newCoalescentTreeEventsT = coalescentTreeT.Tprocess(
-                distanceAboveRoot=rootLength, threshold=threshold, event=event)
-
-            # newEvents = newHaplotypeTreeEvents + newCoalescentTreeEvents
-            # newEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
-            newCoalescentTreeEvents = newCoalescentTreeEventsD + newCoalescentTreeEventsT
-            newCoalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
-            newEvents = newCoalescentTreeEvents + newHaplotypeTreeEvents
+            newEvents = self.DTLprocess(event=event, rootLength=rootLength, newLocusTree=newLocusTree, newHaplotypeTree=newHaplotypeTree)
 
             newHaplotypeTree.addNewLoci(events=newEvents, haplotypeTree=newHaplotypeTree, 
                 level=level + 1)
             return newHaplotypeTree, chosenGeneName, geneNodeName, ancestral
+
 
     """
     unused functions

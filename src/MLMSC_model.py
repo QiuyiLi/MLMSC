@@ -35,7 +35,7 @@ class MLMSC_Model:
         return self.__randomState
 
     def run(self, inputFile, seedArgs, coalescentArgs, recombinationArgs, duplicationArgs, transferArgs, 
-        lossArgs, unlinkArgs, hemiplasy, verbose):
+        lossArgs, unlinkArgs, repeatNumber, hemiplasy, verbose):
         # set parameters
         self.setParameters(
             coalescent=coalescentArgs, 
@@ -44,17 +44,137 @@ class MLMSC_Model:
             transfer=transferArgs, 
             loss=lossArgs, 
             unlink=unlinkArgs,
+            repeat=repeatNumber,
             hemiplasy=hemiplasy,
             verbose=verbose)
 
         # read a species tree from input file
         self.readSpeciesTree(inputFile)
 
-        # construct the original haplotype tree according to the species tree
-        self.constructOriginalHaplotypeTree()
+        f = open('./output/gene_tree_untruncated.newick','w')
+        f.write('')
+        f.close()
+
+        f = open('./output/gene_tree_truncated.newick','w')
+        f.write('')
+        f.close()
+
+        f = open('./output/gene_tree.newick','w')
+        f.write('')
+        f.close()
+
+        for i in range(repeatNumber):
+            print('Tree ' + str(i+1) + ' of ' + str(repeatNumber) + ':')
+            # construct the original haplotype tree according to the species tree
+            self.constructOriginalHaplotypeTree()
+            events = self.DTLprocess()
+
+            # add new loci
+            geneTree = self.haplotypeTree.addNewLoci(events=events, 
+                haplotypeTree=self.haplotypeTree, level=0)
+            geneSkbioTree = geneTree.getSkbioTree()
+
+            # cut the tree at losses
+            geneTreeTruncated = geneTree
+            geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
+            geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
+            for node in geneSkbioTreeTruncated.traverse():
+                if 'loss' in node.name:
+                    geneSkbioTreeTruncated.remove_deleted(
+                        lambda x: x.name == node.name)
+            geneSkbioTreeTruncated.prune()
+            if not geneSkbioTreeTruncated:
+                print('Exception: ALL LOST')
+                # save newick to file
+                f = open('./output/gene_tree_untruncated.newick','a')
+                f.write(str(geneSkbioTree))
+                f.close()
+
+                f = open('./output/gene_tree_truncated.newick','a')
+                f.write('')
+                f.close()
+
+                f = open('./output/gene_tree.newick','a')
+                f.write('')
+                f.close()
+            else:
+                geneSkbioTreeCleaned = geneSkbioTreeTruncated.deepcopy()
+                for node in geneSkbioTreeCleaned.traverse():
+                    if node in geneSkbioTreeCleaned.tips():
+                        speciesId = int(node.name.split('*')[0])
+                        remainder = node.name.split('*')[1]
+                        speciesNode = self.speciesTree.getNodeById(speciesId)
+                        node.name = speciesNode.name + remainder
+                    else:
+                        node.name = ''
+
+                # visualization
+                if self.__parameters['verbose']:
+                    # visualizing the untruncated tree
+                    print('untruncated tree:')
+                    print(geneSkbioTree.ascii_art())	    
+                    # check time consistency 
+                    print('distances from tips to root:')
+                    for node in geneSkbioTree.tips():	
+                        print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
+                    # visualizing the truncated tree
+                    print('truncated tree:')
+                    print(geneSkbioTreeTruncated.ascii_art())
+                    # check time consistency
+                    print('distances from tips to root:')
+                    for node in geneSkbioTreeTruncated.tips():	
+                        print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
+                    print(geneSkbioTreeTruncated.ascii_art())
+                    # final gene table
+                    print('gene tree table:')
+                    geneTreeTruncated.readFromSkbioTree(skbioTree=geneSkbioTreeTruncated, rename=False)
+                    print(geneTreeTruncated)
+                    print('finished.')
+
+                    # save newick to file
+                    f = open('./output/gene_tree_untruncated.newick','a')
+                    f.write(str(geneSkbioTree))
+                    f.close()
+
+                    f = open('./output/gene_tree_truncated.newick','a')
+                    f.write(str(geneSkbioTreeTruncated))
+                    f.close()
+
+                    f = open('./output/gene_tree.newick','a')
+                    string = str(geneSkbioTreeCleaned)
+                    for char in string:
+                        if char == "'":
+                            continue
+                        else:
+                            f.write(char)
+                    f.close()   
+                else:
+                    if repeatNumber == 1:
+                        print('gene tree:')
+                        print(geneSkbioTreeCleaned.ascii_art())
+                    print('finished.')
         
+                    # save newick to file
+                    f = open('./output/gene_tree_untruncated.newick','a')
+                    f.write(str(geneSkbioTree))
+                    f.close()
+
+                    f = open('./output/gene_tree_truncated.newick','a')
+                    f.write(str(geneSkbioTreeTruncated))
+                    f.close()
+
+                    f = open('./output/gene_tree.newick','a')
+                    string = str(geneSkbioTreeCleaned)
+                    for char in string:
+                        if char == "'":
+                            continue
+                        else:
+                            f.write(char)
+                    f.close()
+
+    def DTLprocess(self):
         coalescentTreeProcessD, _ = self.speciesTree.coalescent(
-                distanceAboveRoot=float('inf'))
+                    distanceAboveRoot=float('inf'))
         coalescentTreeD = HaplotypeTree(
             randomState=self.randomState, 
             speciesTree=self.speciesTree, 
@@ -89,97 +209,7 @@ class MLMSC_Model:
         coalescentTreeEvents =  coalescentTreeEventsD + coalescentTreeEventsT
         coalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
         events = coalescentTreeEvents + self.haplotypeTree.Lprocess(distanceAboveRoot=0)
-
-        # run dt subtree
-        geneTree = self.haplotypeTree.addNewLoci(events=events, 
-            haplotypeTree=self.haplotypeTree, level=0)
-        geneSkbioTree = geneTree.getSkbioTree()
-        # cut the tree 
-        geneTreeTruncated = geneTree
-        geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
-        
-        # cut tree at losses
-        geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
-        for node in geneSkbioTreeTruncated.traverse():
-            if 'loss' in node.name:
-                geneSkbioTreeTruncated.remove_deleted(
-                    lambda x: x.name == node.name)
-        geneSkbioTreeTruncated.prune()
-        if not geneSkbioTreeTruncated:
-            print('Exception: ALL LOST')
-            # save newick to file
-            f = open('./output/gene_tree_untruncated.newick','w')
-            f.write(str(geneSkbioTree))
-            f.close()
-
-            f = open('./output/gene_tree_truncated.newick','w')
-            f.write('')
-            f.close()
-
-            f = open('./output/gene_tree_cleaned.newick','w')
-            f.write('')
-            f.close()
-            return
-
-        geneSkbioTreeCleaned = geneSkbioTreeTruncated.deepcopy()
-        for node in geneSkbioTreeCleaned.traverse():
-            if node in geneSkbioTreeCleaned.tips():
-                speciesId = int(node.name.split('*')[0])
-                remainder = node.name.split('*')[1]
-                speciesNode = self.speciesTree.getNodeById(speciesId)
-                node.name = speciesNode.name + remainder
-            else:
-                node.name = ''
-
-        # visualization
-        if self.__parameters['verbose']:
-            # visualizing the untruncated tree
-            print('untruncated tree:')
-            print(geneSkbioTree.ascii_art())	    
-            # check time consistency 
-            print('distances from tips to root:')
-            for node in geneSkbioTree.tips():	
-                print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
-            # visualizing the truncated tree
-            print('truncated tree:')
-            print(geneSkbioTreeTruncated.ascii_art())
-            # check time consistency
-            print('distances from tips to root:')
-            for node in geneSkbioTreeTruncated.tips():	
-                print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
-            print(geneSkbioTreeTruncated.ascii_art())
-            # final gene table
-            print('gene tree table:')
-            geneTreeTruncated.readFromSkbioTree(skbioTree=geneSkbioTreeTruncated, rename=False)
-            print(geneTreeTruncated)
-        
-        else:
-            print('distances from tips to root:')
-            for node in geneSkbioTreeCleaned.tips():	
-                print(str(geneSkbioTreeCleaned.distance(node)) + ' ' + str(node.name))
-            print('gene tree:')
-            # print(geneSkbioTreeTruncated.ascii_art())
-            print(geneSkbioTreeCleaned.ascii_art())
-
-                
-        # save newick to file
-        f = open('./output/gene_tree_untruncated.newick','w')
-        f.write(str(geneSkbioTree))
-        f.close()
-
-        f = open('./output/gene_tree_truncated.newick','w')
-        f.write(str(geneSkbioTreeTruncated))
-        f.close()
-
-        f = open('./output/gene_tree_cleaned.newick','w')
-        string = str(geneSkbioTreeCleaned)
-        for char in string:
-            if char == "'":
-                continue
-            else:
-                f.write(char)
-        f.close()
-
+        return events
         
     def cutTree(self, untruncatedGeneTree):
         root = untruncatedGeneTree.root()
@@ -208,9 +238,9 @@ class MLMSC_Model:
             else:
                 return 0
 
-    def setParameters(self, coalescent, recombination, duplication, transfer, loss, 
-        hemiplasy, unlink, verbose):
-        if not coalescent:
+    def setParameters(self, coalescent, recombination, duplication, transfer, loss, unlink,
+        repeat, hemiplasy, verbose):
+        if coalescent is None:
             raise MLMSC_Error('missing coalescent parameter')
         self.__parameters['coalescent'] = coalescent
 
@@ -231,8 +261,12 @@ class MLMSC_Model:
         self.__parameters['loss'] = loss
 
         if unlink is None:
-            raise MLMSC_Error('missing unlink option')
+            raise MLMSC_Error('missing unlink parameter')
         self.__parameters['unlink'] = unlink
+
+        if repeat is None:
+            raise MLMSC_Error('missing repeat times')
+        self.__parameters['repeat'] = repeat
 
         if hemiplasy is None:
             raise MLMSC_Error('missing hemiplasy option')
@@ -248,12 +282,11 @@ class MLMSC_Model:
         self.speciesTree.initialize(path=path)
 
         self.speciesTree.setCoalescentRate(
-            coalescentPrmt=self.__parameters['coalescent'])
+            coalescentPrmt=self.parameters['coalescent'])
         
         self.speciesTree.setRecombinationRate(
-            recombinationPrmt=self.__parameters['recombination'])
+            recombinationPrmt=self.parameters['recombination'])
 
-        # print('='*40, self.speciesTree.recombinationRate)	
         if self.__parameters['verbose']:
             print('species tree:')	
             print(self.speciesTree)	

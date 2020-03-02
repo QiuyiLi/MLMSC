@@ -88,6 +88,13 @@ def readCommand(argv):
         default=0.5)
 
     parser.add_option(
+        '-n', '--numRepeats', type='int', dest='repeatNumber',
+        help=default(
+            'number of repeats, '
+            'e.g., "-n 10"'),
+        default=1)
+
+    parser.add_option(
         '-h', '--hemiplasy', type='int', dest='hemiplasy',
         help=default('hemiplasy option, 0 or 1'), metavar='HEMIPLASY',
         default=1)
@@ -119,6 +126,7 @@ def readCommand(argv):
     args['transferArgs'] = options.transferArgs
     args['lossArgs'] = options.lossArgs
     args['unlinkArgs'] = options.unlinkArgs
+    args['repeatNumber'] = options.repeatNumber
 
     # hemiplasy option
     if options.hemiplasy != 0 and options.hemiplasy != 1:
