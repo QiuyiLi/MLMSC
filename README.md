@@ -35,26 +35,18 @@ python3 MLMSC.py -i data/tree_sample_0.txt -s 2020210
 ```
 The simulator will run with the default setting and you should be able to see the following outputs:
 ```
-distances from tips to root:
-5.992582775227923 A_lv=0_id=3
-5.992582775227923 A
-5.992582775227923 A_lv=0_id=1
-5.992582775227923 A_lv=0_id=2
-5.992582775227923 D_lv=0_id=0
-5.992582775227923 D
 gene tree:
-                                        /-A_lv=0_id=3
+                                        /-A_locus0_event3
                               /--------|
                              |         |          /-A
                     /--------|          \--------|
-                   |         |                    \-A_lv=0_id=1
+                   |         |                    \-A_locus0_event1
           /--------|         |
-         |         |          \-A_lv=0_id=2
+         |         |          \-A_locus0_event2
 ---------|         |
-         |          \-D_lv=0_id=0
+         |          \-D_locus0_event0
          |
           \-D
-
 ```
 
 ##  Usage
@@ -62,75 +54,71 @@ gene tree:
 ### Input file
 * Species tree: -i or --inputFile; the prespecified species tree written in [Newick](https://en.wikipedia.org/wiki/Newick_format) format.
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick
 ```
 
 ### Input parameters
 
-* Coalescent rate: -c or --coalescentRate; the coalesent rate in multispecies coalescent, default: -c 1.0.
+* Coalescent rate: -c or --coalescentRate; the coalescent rate in multispecies coalescent, default: -c 1.0
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -c 0.5
-```
-  
-* Recombination rate: -r or --recombinationRate; the recombiantion rate in linked coalescent, default: -r 0.5.
-```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -r 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -c 0.5
 ```
   
-* Duplication rate: -d or --dulpicationRate; occurrence rate of gene duplication, default: -d 0.2.
+* Recombination rate: -r or --recombinationRate; the recombiantion rate in linked coalescent, default: -r 0.5
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -d 0.5
-```
-  
-* Transfer rate; -t or --transferRate; occurrence rate of horizontal gene transfer, default: -t 0.1.
-```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -t 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -r 0.5
 ```
   
-* Loss rate; -l or --lossRate; occurrence rate of gene loss, default: -l 0.2.
+* Duplication rate: -d or --duplicationRate; occurrence rate of gene duplication, default: -d 0.2
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -l 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -d 0.5
 ```
   
-* Unlink probability; -u or --unlinkProb; the probability that a duplication is unlinked, default: -u 0.5.
+* Transfer rate; -t or --transferRate; occurrence rate of horizontal gene transfer, default: -t 0.1
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -u 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -t 0.5
+```
+  
+* Loss rate; -l or --lossRate; occurrence rate of gene loss, default: -l 0.2
+```
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -l 0.5
+```
+  
+* Unlink probability; -u or --unlinkProb; the probability that a duplication is unlinked, default: -u 0.5
+```
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -u 0.5 
 ```
   
 * Hemiplasy option: -h or --hemiplasy; whether or not the copy number hemiplasy is allowed, default: -h True.
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -h False
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -h False
 ```
   
 * Verbose option: -v or --verbose; detailed outputs for debugging purposes, default: -v False.
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -v True
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -v True
 ```
 
-* Seed number: -s or --seed; set seed for reproduciblility, default -s None (ramdon).
+* Seed number: -s or --seed; set seed for reproduciblility, default -s None (random).
 ```
-e.g., python3 MLMSC.py -i data/tree_sample_0.txt -s 0
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 ```
 
 
 ### Command line outputs
-* distances from tips to root: for each leaf of the final gene tree, the distance from the leaf to the root of the gene tree is calculated. These distances should be equal to ensure time consistency.
 * gene tree: an ascii drawing of the gene tree as a first-stage visualization, which does not cover the information of branch lengths. A much better visualization can be obtained by importing gene_tree.newick to many third party programs.
 * Exception: ALL LOST: all gene lineages are lost, hence there is not gene tree.
+* distances from tips to root: for each leaf of the final gene tree, the distance from the leaf to the root of the gene tree is calculated. These distances should be equal to ensure time consistency.
   
 ### Output files
 * gene_tree_untruncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree before cutted from the loss points.
 * gene_tree_truncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree after cutted from the loss points.
 * gene_tree_cleaned.newick: final output for the end users, the final gene with internal node names removed and leaf names converted according to the names of species.
 
-```
-Give an example
-```
 ## Authors
 
 * **Qiuyi Li** - *Initial work*
-* **Geoffery Law** - *Structuring*
-
+* **Geoffrey Law** - *Data structure*
 See also the list of [contributors](https://github.com/QiuyiLi/MLMSC/graphs/contributors) who participated in this project.
 
 ## License
@@ -139,6 +127,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
+* QL 
 * Inspiration
 * etc
