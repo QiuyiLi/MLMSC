@@ -5,12 +5,10 @@ from collections import defaultdict
 from statistics import mean
 from .tree_table import *
 
-
 class SpeciesTree:
     """
     Nodes are represented in Tree Table which is introduced in tree_table.py
     """
-
     def __init__(self, randomState):
         self.__randomState = randomState
         self.__treeTable = None
@@ -157,16 +155,16 @@ class SpeciesTree:
                     if (len(fromSets[children[0]]) != 0 
                         and len(fromSets[children[1]]) != 0):
                         toSets[children[0]] = self.__coalescentRecurse(
-                                                branchLength=self.getNodeById(
-                                                    children[0]).distanceToParent,
-                                                fromSet=fromSets[children[0]], 
-                                                subCoalescentProcess=coalescentProcess[children[0]])
+                            branchLength=self.getNodeById(
+                                children[0]).distanceToParent,
+                            fromSet=fromSets[children[0]], 
+                            subCoalescentProcess=coalescentProcess[children[0]])
                         labelled[children[0]] = True
                         toSets[children[1]] = self.__coalescentRecurse(
-                                                branchLength=self.getNodeById(
-                                                    children[1]).distanceToParent,
-                                                fromSet=fromSets[children[1]], 
-                                                subCoalescentProcess=coalescentProcess[children[1]])
+                            branchLength=self.getNodeById(
+                                children[1]).distanceToParent,
+                            fromSet=fromSets[children[1]], 
+                            subCoalescentProcess=coalescentProcess[children[1]])
                         labelled[children[1]] = True
                         # update cladeSet[parent] as the
                         # union of the cladeSet of its children 
@@ -194,7 +192,7 @@ class SpeciesTree:
             # re-initialization for the next recursion
             # oldLeaves <- newLeaves
             # label <- false
-            oldLeaves = tempNewLeaves.copy()
+            oldLeaves = tempNewLeaves
             newLeaves = []
             labelled = {}
             for node in nodes:
@@ -221,7 +219,7 @@ class SpeciesTree:
                     'toSet': None,
                     'distance': branchLength
                 })
-            toSet = fromSet.copy()
+            toSet = fromSet
             return toSet
         else:
             # rate of coalescence in an ancestral branch = mean of each child branch
@@ -236,23 +234,22 @@ class SpeciesTree:
                     'distance': branchLength
                 })
                 # print(nodeId, coalescentProcess[nodeId],fakeDistance)
-                toSet = fromSet.copy()
+                toSet = fromSet
                 return toSet
             else:
                 # when coalescent, randomly merge 2 elements in the gene sets
                 # if there are more than one genes in the cladeSet, start merging
                 if len(fromSet) >= 2:
-                    temp_set = fromSet
                     # choose a couple, merge them, then put it back
                     couple = self.randomState.choice(
                         fromSet, size=2, replace=False)
-                    toSet = [''.join(self.__starSorted(couple))] \
+                    toSet = [''.join(self.sorted(couple, seperater='*'))] \
                         + [e for e in fromSet if e not in couple]
 
                     # save process
                     subCoalescentProcess.append({
-                        'fromSet': temp_set,
-                        'toSet': toSet.copy(),
+                        'fromSet': fromSet,
+                        'toSet': toSet,
                         'distance': fakeDistance
                     })
                     branchLength = branchLength - fakeDistance
@@ -263,10 +260,10 @@ class SpeciesTree:
                         subCoalescentProcess=subCoalescentProcess)
                 else:
                     # stop when cladeSet only has one element
-                    toSet = fromSet.copy()
+                    toSet = fromSet
                     return toSet         
 
-    def _starInSet(self, target, clade):
+    def starInSet(self, target, clade):
         """
         checking whether a given clade is in the target set
         modified for the "*" representation
@@ -278,16 +275,16 @@ class SpeciesTree:
         else:
             return False
 
-    def __starSorted(self, couple):
+    def sorted(self, couple, seperater):
         """
         1*4* + 2*3* -> 1*4*2*3* -> 1*2*3*4*
         """
         string = ''
         for e in couple:
             string += e
-        splited = string.split('*')[:-1]
+        splited = string.split(seperater)[:-1]
         splited = sorted([int(e) for e in splited])
-        return [str(e) + '*' for e in splited]
+        return [str(e) + seperater for e in splited]
 
     def getTimeSequences(self, coalescentProcess):
         """
@@ -335,7 +332,7 @@ class SpeciesTree:
                         and leafName not in mergingSet['toSet']):
                         for element in mergingSet['toSet']:
                             if (len(leafName) < len(element) 
-                                and self._starInSet(leafName, element)):
+                                and self.starInSet(leafName, element)):
                                 coalescentHeight = self.getDistanceToLeaf(
                                     nodeId=speciesNodeId, 
                                     branchDistance=branchDistance)
@@ -345,20 +342,6 @@ class SpeciesTree:
                                     leafName=element, 
                                     coalescentProcess=coalescentProcess)
         return sequence
-
-    def boundedCoalescent(self, distanceAboveRoot):
-        """
-        abstract method
-        implementation in locus_tree.py
-        """
-        pass
-    
-    def incompleteCoalescent(self, distanceAboveRoot):
-        """
-        abstract method
-        implementation in locus_tree.py
-        """
-        pass
 
     """
     unsed function

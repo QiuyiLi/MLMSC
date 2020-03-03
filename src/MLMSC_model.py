@@ -1,5 +1,6 @@
 import numpy as np
 from .species_tree import *
+from .locus_tree import *
 from .haplotype_tree import *
 from .exception import *
 
@@ -10,21 +11,21 @@ class MLMSC_Model:
         else:
             self.__randomState = np.random.RandomState(seed)
         self.__speciesTree = None
-        self.__haplotypeTree = None
-        self.__locusTrees = []
+        # self.__haplotypeTree = None
+        # self.__locusTree = None
         self.__parameters = {}
 
     @property
     def speciesTree(self):
         return self.__speciesTree
 
-    @property
-    def haplotypeTree(self):
-        return self.__haplotypeTree
+    # @property
+    # def haplotypeTree(self):
+    #     return self.__haplotypeTree
 
-    @property
-    def locusTrees(self):
-        return self.__locusTrees
+    # @property
+    # def locusTrees(self):
+    #     return self.__locusTrees
 
     @property
     def parameters(self):
@@ -64,14 +65,20 @@ class MLMSC_Model:
         f.close()
 
         for i in range(repeatNumber):
-            print('Tree ' + str(i+1) + ' of ' + str(repeatNumber) + ':')
+            if repeatNumber > 1:
+                print('Tree ' + str(i+1) + ' of ' + str(repeatNumber) + ':')
             # construct the original haplotype tree according to the species tree
-            self.constructOriginalHaplotypeTree()
-            events = self.DTLprocess()
+            originalLocusTree = self.constructOriginalLocusTree()
+            originalHaplotypeTree = self.constructOriginalHaplotypeTree()
+
+            events = originalHaplotypeTree.DTLprocess(
+                locusTree=originalLocusTree, 
+                haplotypeTree=originalHaplotypeTree, 
+                initial=True)
 
             # add new loci
-            geneTree = self.haplotypeTree.addNewLoci(events=events, 
-                haplotypeTree=self.haplotypeTree, level=0)
+            geneTree = originalHaplotypeTree.addNewLoci(events=events, 
+                haplotypeTree=originalHaplotypeTree, level=0)
             geneSkbioTree = geneTree.getSkbioTree()
 
             # cut the tree at losses
@@ -152,7 +159,8 @@ class MLMSC_Model:
                     if repeatNumber == 1:
                         print('gene tree:')
                         print(geneSkbioTreeCleaned.ascii_art())
-                    print('finished.')
+                    else:
+                        print('finished.')
         
                     # save newick to file
                     f = open('./output/gene_tree_untruncated.newick','a')
@@ -171,45 +179,6 @@ class MLMSC_Model:
                         else:
                             f.write(char)
                     f.close()
-
-    def DTLprocess(self):
-        coalescentTreeProcessD, _ = self.speciesTree.coalescent(
-                    distanceAboveRoot=float('inf'))
-        coalescentTreeD = HaplotypeTree(
-            randomState=self.randomState, 
-            speciesTree=self.speciesTree, 
-            locusTree=self.speciesTree)
-        coalescentTreeD.initialize(
-            locusTree=self.speciesTree, 
-            coalescentProcess=coalescentTreeProcessD, 
-            fullCoalescentProcess=coalescentTreeProcessD,
-            rename=False)
-        coalescentTreeD.parameters = self.haplotypeTree.parameters
-        coalescentTreeEventsD = coalescentTreeD.Dprocess(
-            distanceAboveRoot=0, threshold=float('inf'), event=None)
-
-        coalescentTreeProcessT, _ = self.speciesTree.coalescent(
-                distanceAboveRoot=float('inf'))
-        coalescentTreeT = HaplotypeTree(
-            randomState=self.randomState, 
-            speciesTree=self.speciesTree, 
-            locusTree=self.speciesTree)
-        coalescentTreeT.initialize(
-            locusTree=self.speciesTree, 
-            coalescentProcess=coalescentTreeProcessT, 
-            fullCoalescentProcess=coalescentTreeProcessT,
-            rename=False,
-            event = 'transfer')
-        coalescentTreeT.parameters = self.haplotypeTree.parameters
-        coalescentTreeEventsT = coalescentTreeT.Tprocess(
-            distanceAboveRoot=0, threshold=float('inf'), event=None)
-
-        # events = self.haplotypeTree.Lprocess(distanceAboveRoot=0) + coalescentTreeEvents
-        # events.sort(reverse=True, key=lambda x: x['eventHeight'])
-        coalescentTreeEvents =  coalescentTreeEventsD + coalescentTreeEventsT
-        coalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
-        events = coalescentTreeEvents + self.haplotypeTree.Lprocess(distanceAboveRoot=0)
-        return events
         
     def cutTree(self, untruncatedGeneTree):
         root = untruncatedGeneTree.root()
@@ -291,29 +260,41 @@ class MLMSC_Model:
             print('species tree:')	
             print(self.speciesTree)	
             print(self.speciesTree.getSkbioTree().ascii_art())	
-            print()
+
+    def constructOriginalLocusTree(self):
+        locusTree = LocusTree(randomState=self.randomState)
+        locusTree.initialize(
+            nodes=self.speciesTree.getNodes(), 
+            skbioTree=self.speciesTree.getSkbioTree())
+        locusTree.coalescentRate = self.speciesTree.coalescentRate
+        locusTree.recombinationRate = self.speciesTree.recombinationRate
+        return locusTree
+        
             
     def constructOriginalHaplotypeTree(self):
-        self.__haplotypeTree = HaplotypeTree(
-            randomState=self.randomState, speciesTree=self.speciesTree, locusTree=self.speciesTree)
-        self.haplotypeTree.initialize(locusTree=self.speciesTree)
+        haplotypeTree = HaplotypeTree(
+            randomState=self.randomState, 
+            speciesTree=self.speciesTree, 
+            locusTree=self.speciesTree)
+        haplotypeTree.initialize(locusTree=self.speciesTree)
 
         if self.__parameters['verbose']:
             print('original haplotype tree:')	
-            print(self.haplotypeTree)	
-            print(self.haplotypeTree.getSkbioTree().ascii_art())	
+            print(haplotypeTree)	
+            print(haplotypeTree.getSkbioTree().ascii_art())	
 
-        self.haplotypeTree.setEventRates(
+        haplotypeTree.setEventRates(
             duplicationPrmt=self.parameters['duplication'],
             transferPrmt=self.parameters['transfer'],
             lossPrmt=self.parameters['loss'],
             unlinkProb=self.parameters['unlink'],
             hemiplasy=self.parameters['hemiplasy'],
             verbose=self.parameters['verbose'])
-        # self.haplotypeTree.setUnlinkProb(
+        # haplotypeTree.setUnlinkProb(
         #     unlinkProb=self.parameters['unlink'])
-        # self.haplotypeTree.setHemiplasy(
+        # haplotypeTree.setHemiplasy(
         #     hemiplasy=self.parameters['hemiplasy'])
-        # self.haplotypeTree.setVerbose(
+        # haplotypeTree.setVerbose(
         #     verbose=self.parameters['verbose'])
+        return haplotypeTree
         
