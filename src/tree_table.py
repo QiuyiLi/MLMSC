@@ -259,19 +259,6 @@ class TreeTable:
             entry.fakeId = index
             index += 1
 
-    # def __distanceToRoot(self, nodeId):
-    #     """
-    #     find the distance of a given node to the root 
-    #     needed when finding the walking distance
-    #     """
-    #     if (self.getEntryById(nodeId).parent < 0 or 
-    #         nodeId == self.root.id):
-    #         return 0
-    #     else:
-    #         distanceToParent = self.getEntryById(nodeId).distanceToParent
-    #         parent = self.getEntryById(nodeId).parent
-    #         return distanceToParent + self.__distanceToRoot(parent)
-
     def __distanceToRoot(self, nodeId):
         """
         find the distance of a given node to the root 
@@ -298,10 +285,3 @@ class TreeTable:
             return distanceToChild0 + self.distanceToLeaf(child0, branchDistance=branchDistance)
         else:
             return branchDistance
-
-        # distance = branchDistance + (self.__distanceToRoot(self.leaves[0].id) - self.__distanceToRoot(nodeId))
-        # if distance < 0:
-        #     distance = 0
-        # return distance
-
-        
