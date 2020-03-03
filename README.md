@@ -36,22 +36,18 @@ pip install -r requirements.txt
 
 The MLMSC Simulator should be ready to use now. You can test the the simulator by executing:
 ```
-python3 MLMSC.py -i species_trees/species_tree_0.newick -s 2020210
+python3 MLMSC.py -i species_trees/species_tree_0.newick -s 2020
 ```
 The simulator will run with the default setting and you should be able to see the following outputs:
 ```
 gene tree:
-                                        /-A_locus0_event3
-                              /--------|
-                             |         |          /-A
-                    /--------|          \--------|
-                   |         |                    \-A_locus0_event1
-          /--------|         |
-         |         |          \-A_locus0_event2
----------|         |
-         |          \-D_locus0_event0
+                              /-A
+                    /--------|
+          /--------|          \-B
+         |         |
+---------|          \-E_locus0_event1
          |
-          \-D
+          \-E_locus0_event0
 ```
 
 ##  Usage
