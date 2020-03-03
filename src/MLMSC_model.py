@@ -19,14 +19,6 @@ class MLMSC_Model:
     def speciesTree(self):
         return self.__speciesTree
 
-    # @property
-    # def haplotypeTree(self):
-    #     return self.__haplotypeTree
-
-    # @property
-    # def locusTrees(self):
-    #     return self.__locusTrees
-
     @property
     def parameters(self):
         return self.__parameters
@@ -269,7 +261,6 @@ class MLMSC_Model:
         locusTree.coalescentRate = self.speciesTree.coalescentRate
         locusTree.recombinationRate = self.speciesTree.recombinationRate
         return locusTree
-        
             
     def constructOriginalHaplotypeTree(self):
         haplotypeTree = HaplotypeTree(
@@ -290,11 +281,5 @@ class MLMSC_Model:
             unlinkProb=self.parameters['unlink'],
             hemiplasy=self.parameters['hemiplasy'],
             verbose=self.parameters['verbose'])
-        # haplotypeTree.setUnlinkProb(
-        #     unlinkProb=self.parameters['unlink'])
-        # haplotypeTree.setHemiplasy(
-        #     hemiplasy=self.parameters['hemiplasy'])
-        # haplotypeTree.setVerbose(
-        #     verbose=self.parameters['verbose'])
         return haplotypeTree
         

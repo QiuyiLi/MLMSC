@@ -19,9 +19,6 @@ class HaplotypeTree:
         self.__fullCoalescentProcess = None
         self.__treeTable = None
         self.__parameters = {}
-        # self.__unlinkProb = None
-        # self.__hemiplasy = None
-        # self.__verbose = None
 
     def __repr__(self):
         return str(self.__treeTable)
@@ -59,14 +56,6 @@ class HaplotypeTree:
     @parameters.setter
     def parameters(self, parameters):
         self.__parameters = parameters
-    
-    # @property
-    # def hemiplasy(self):
-    #     return self.__hemiplasy
-
-    # @property
-    # def verbose(self):
-    #     return self.__verbose
 
     def getSkbioTree(self):
         return self.__treeTable.skbioTree
@@ -129,17 +118,6 @@ class HaplotypeTree:
         self.__parameters['u'] = unlinkProb
         self.__parameters['h'] = hemiplasy
         self.__parameters['v'] = verbose
-
-
-    # def setUnlinkProb(self, unlinkProb):
-    #     self.__unlinkProb = unlinkProb
-
-    # def setHemiplasy(self, hemiplasy):
-    #     self.__hemiplasy = hemiplasy
-
-    # detailed output for debugging
-    # def setVerbose(self, verbose):
-    #     self.__verbose = verbose
 
     def createSkbioTree(self, timeSequences, geneNodeName):
         """
@@ -571,9 +549,6 @@ class HaplotypeTree:
         newEvents = newCoalescentTreeEvents + haplotypeTreeEvents
         return newEvents
     
-    def binom(self, n, k):
-        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
-
     def coalescentJoining(self, event, haplotypeTree):
         fullCoalescentProcess=haplotypeTree.fullCoalescentProcess
         selectedCoalescentProcess=haplotypeTree.coalescentProcess
@@ -596,7 +571,6 @@ class HaplotypeTree:
                 selectedCoalescentProcess=selectedCoalescentProcess,
                 haplotypeTree=haplotypeTree, 
                 branchLength=0, passed=False)
-
         return geneNodeName, distanceAboveGeneNode, branchLength
 
     def __coalescentJoiningRecurse(self, nodeId, event, 
@@ -614,7 +588,7 @@ class HaplotypeTree:
                 if distanceAboveSpeciesNode < 0:
                     passed = True
                     if len(e['fromSet']) >= 2:
-                        coalescentRate = self.binom(len(e['fromSet']), 2)*unitCoalescentRate
+                        coalescentRate = self.speciesTree.binom(len(e['fromSet']), 2)*unitCoalescentRate
                         coalDistance = self.randomState.exponential(scale=1.0 / coalescentRate)
                     else: 
                         coalDistance = float('inf')
@@ -644,7 +618,7 @@ class HaplotypeTree:
                         continue    
             else:
                 if len(e['fromSet']) >= 2:
-                        coalescentRate = self.binom(len(e['fromSet']), 2)*unitCoalescentRate
+                        coalescentRate = self.speciesTree.binom(len(e['fromSet']), 2)*unitCoalescentRate
                         coalDistance = self.randomState.exponential(scale=1.0 / coalescentRate)
                 else: 
                     coalDistance = float('inf')

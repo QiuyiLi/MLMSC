@@ -200,9 +200,6 @@ class SpeciesTree:
 
         return coalescentProcess, cladeSetIntoRoot
 
-    def binom(self, n, k):
-        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
-
     def __coalescentRecurse(self, branchLength, fromSet, subCoalescentProcess):
         """
         This is the recursive part of the multispecies coalescent process:
@@ -263,29 +260,6 @@ class SpeciesTree:
                     toSet = fromSet
                     return toSet         
 
-    def starInSet(self, target, clade):
-        """
-        checking whether a given clade is in the target set
-        modified for the "*" representation
-        """
-        if len(target) <= len(clade):
-            splited_target = target.split('*')[:-1]
-            splited_clade = clade.split('*')[:-1]
-            return set(splited_target).issubset(set(splited_clade))
-        else:
-            return False
-
-    def sorted(self, couple, seperater):
-        """
-        1*4* + 2*3* -> 1*4*2*3* -> 1*2*3*4*
-        """
-        string = ''
-        for e in couple:
-            string += e
-        splited = string.split(seperater)[:-1]
-        splited = sorted([int(e) for e in splited])
-        return [str(e) + seperater for e in splited]
-
     def getTimeSequences(self, coalescentProcess):
         """
         backward-in-time coalescent process modified data structure 
@@ -317,6 +291,36 @@ class SpeciesTree:
                         break
                     break
         return timeSequences, geneNodeName
+
+
+    """""""""""""""""""""""""""""""""
+    utility functions for coalescent
+    """""""""""""""""""""""""""""""""
+    def binom(self, n, k):
+        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
+
+    def starInSet(self, target, clade):
+        """
+        checking whether a given clade is in the target set
+        modified for the "*" representation
+        """
+        if len(target) <= len(clade):
+            splited_target = target.split('*')[:-1]
+            splited_clade = clade.split('*')[:-1]
+            return set(splited_target).issubset(set(splited_clade))
+        else:
+            return False
+
+    def sorted(self, couple, seperater):
+        """
+        1*4* + 2*3* -> 1*4*2*3* -> 1*2*3*4*
+        """
+        string = ''
+        for e in couple:
+            string += e
+        splited = string.split(seperater)[:-1]
+        splited = sorted([int(e) for e in splited])
+        return [str(e) + seperater for e in splited]
 
     def __findAncestors(self, leafName, coalescentProcess):
         """
