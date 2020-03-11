@@ -59,8 +59,9 @@ class MLMSC_Model:
         for i in range(repeatNumber):
             if repeatNumber > 1:
                 print('Tree ' + str(i+1) + ' of ' + str(repeatNumber) + ':')
-            # construct the original haplotype tree according to the species tree
+            # the original locus tree is the same as the species tree
             originalLocusTree = self.constructOriginalLocusTree()
+            # construct the original haplotype tree according to the species tree
             originalHaplotypeTree = self.constructOriginalHaplotypeTree()
 
             events = originalHaplotypeTree.DTLprocess(
@@ -274,7 +275,7 @@ class MLMSC_Model:
             print(haplotypeTree)	
             print(haplotypeTree.getSkbioTree().ascii_art())	
 
-        haplotypeTree.setEventRates(
+        haplotypeTree.setParameters(
             duplicationPrmt=self.parameters['duplication'],
             transferPrmt=self.parameters['transfer'],
             lossPrmt=self.parameters['loss'],

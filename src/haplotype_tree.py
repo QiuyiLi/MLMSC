@@ -111,7 +111,7 @@ class HaplotypeTree:
         #             childClades = [int(j) for j in childClades]
         #             geneNode.splits.append(childClades)
 
-    def setEventRates(self, duplicationPrmt, transferPrmt, lossPrmt, unlinkProb, hemiplasy, verbose):
+    def setParameters(self, duplicationPrmt, transferPrmt, lossPrmt, unlinkProb, hemiplasy, verbose):
         self.__parameters['d'] = duplicationPrmt
         self.__parameters['t'] = transferPrmt
         self.__parameters['l'] = lossPrmt
@@ -235,6 +235,14 @@ class HaplotypeTree:
         self.__treeTable = TreeTable()
         self.__treeTable.createFromSkbioTree(skbioTree, rename)
 
+
+
+
+
+    
+    """""""""""""""
+    main functions
+    """""""""""""""
     def Lprocess(self, distanceAboveRoot, event=None):
         events = []
         # trivial case
@@ -669,8 +677,6 @@ class HaplotypeTree:
         4. simulate all the events on the haplotype tree 
         5. recurse
         """
-        # selectedCoalescentProcess = haplotypeTree.coalescentProcess
-        # fullCoalescentProcess = haplotypeTree.fullCoalescentProcess
         eventIndex = -1
         
         for event in events:
@@ -1010,8 +1016,6 @@ class HaplotypeTree:
                 f = open(os.path.join(path, file_name), 'w')
                 f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
                 f.close()
-                # print('find ils at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
-                #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
             else: 
                 if (gene_splits):
                     species_id = self.map_gene_id_to_species_id(j)
@@ -1027,12 +1031,7 @@ class HaplotypeTree:
                     f = open(os.path.join(path, file_name), 'w')
                     f.write(str(gene_node.name) + ',' + str(gene_split_0) + ' ' + str(gene_split_1))
                     f.close()
-                    # print('find speciation at gene node ' + str(gene_node.name) + ' split: ' + str(gene_split_0) + ' ' 
-                    #         + str(gene_split_1) + ' ' + 'species_id: ' + str(species_id))
 
-    """
-    unused function
-    """
     def __findTransferTarget(self, eventHeight, geneId):
         speciesNodes = self.speciesTree.getNodes()
         originSpeciesId = self.__mapGeneIdToSpeciesId(geneId=geneId)
