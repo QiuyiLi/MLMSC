@@ -113,14 +113,14 @@ class MLMSC_Model:
                     # visualizing the untruncated tree
                     print('untruncated tree:')
                     print(geneSkbioTree.ascii_art())	    
-                    # check time consistency 
+                    # check time consistency of the untruncated tree
                     print('distances from tips to root:')
                     for node in geneSkbioTree.tips():	
                         print(str(geneSkbioTree.distance(node)) + ' ' + str(node.name))
                     # visualizing the truncated tree
                     print('truncated tree:')
                     print(geneSkbioTreeTruncated.ascii_art())
-                    # check time consistency
+                    # check time consistency of the truncated tree
                     print('distances from tips to root:')
                     for node in geneSkbioTreeTruncated.tips():	
                         print(str(geneSkbioTreeTruncated.distance(node)) + ' ' + str(node.name))
@@ -172,33 +172,6 @@ class MLMSC_Model:
                         else:
                             f.write(char)
                     f.close()
-        
-    def cutTree(self, untruncatedGeneTree):
-        root = untruncatedGeneTree.root()
-        self.cutTreeRecurse(root, untruncatedGeneTree)
-        return untruncatedGeneTree
-    
-    def cutTreeRecurse(self, node, untruncatedGeneTree):
-        if node.children:
-            if 'loss' in node.children[0].name:
-                if 'loss' in node.children[1].name:
-                    findIt = 1
-                else:
-                    findIt = self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
-            else:
-                if 'loss' in node.children[1].name:
-                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)
-                else:
-                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)*\
-                        self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
-            if findIt:
-                node.name += '_loss'
-            return findIt
-        else:
-            if 'loss' in node.name:
-                return 1
-            else:
-                return 0
 
     def setParameters(self, coalescent, recombination, duplication, transfer, loss, unlink,
         repeat, hemiplasy, verbose):
@@ -283,4 +256,31 @@ class MLMSC_Model:
             hemiplasy=self.parameters['hemiplasy'],
             verbose=self.parameters['verbose'])
         return haplotypeTree
+
+    def cutTree(self, untruncatedGeneTree):
+        root = untruncatedGeneTree.root()
+        self.cutTreeRecurse(root, untruncatedGeneTree)
+        return untruncatedGeneTree
+    
+    def cutTreeRecurse(self, node, untruncatedGeneTree):
+        if node.children:
+            if 'loss' in node.children[0].name:
+                if 'loss' in node.children[1].name:
+                    findIt = 1
+                else:
+                    findIt = self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
+            else:
+                if 'loss' in node.children[1].name:
+                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)
+                else:
+                    findIt = self.cutTreeRecurse(node.children[0], untruncatedGeneTree)*\
+                        self.cutTreeRecurse(node.children[1], untruncatedGeneTree)
+            if findIt:
+                node.name += '_loss'
+            return findIt
+        else:
+            if 'loss' in node.name:
+                return 1
+            else:
+                return 0
         

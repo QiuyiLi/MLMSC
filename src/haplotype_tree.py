@@ -671,10 +671,10 @@ class HaplotypeTree:
 
     def addNewLoci(self, events, haplotypeTree, level):
         """
-        1. simulate all the events on the haplotype tree 
+        1. simulate events on the current locus tree 
         2. construct the corresponding new locus tree
-        3. use incomplete coalescence to generate the new haplotype tree
-        4. simulate all the events on the haplotype tree 
+        3. generate the new haplotype tree and forest in the new locus tree
+        4. simulate events on the new locus tree 
         5. recurse
         """
         eventIndex = -1
@@ -816,7 +816,6 @@ class HaplotypeTree:
                                 print('haplotype tree after:')	
                                 print(haplotypeTree.getSkbioTree().ascii_art())
 
-            # no need for this right now
             elif (event['type'] == 'transfer'):
                 transferTargetId = event['targetSpeciesId']
                 targetHeight = self.speciesTree.getDistanceToLeaf(transferTargetId)
