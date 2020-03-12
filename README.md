@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 The MLMSC Simulator should be ready to use now. You can test the the simulator by executing:
 ```
-python3 MLMSC.py -i species_trees/species_tree_0.newick -s 2020210
+python3 MLMSC.py -i species_trees/species_tree_0.newick -s 20200210
 ```
 The simulator will run with the default setting and you should be able to see the following outputs:
 ```
