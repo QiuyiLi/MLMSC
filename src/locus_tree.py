@@ -42,6 +42,10 @@ class LocusTree(SpeciesTree):
         root = self.getRoot()
         fullCoalescentProcess, genesIntoRoot = self.coalescent(distanceAboveRoot)
 
+        chosenGene = self.randomState.choice(genesIntoRoot)
+        selectedCoalescentProcess = self.__selectCoalescentProcess(
+            fullCoalescentProcess, chosenGene)
+
         fromSet = fullCoalescentProcess[root.id][-1]['fromSet']
         distance = fullCoalescentProcess[root.id][-1]['distance']
         fullCoalescentProcess[root.id].pop()
@@ -66,10 +70,6 @@ class LocusTree(SpeciesTree):
                 'toSet': None,
                 'distance': float('inf')
         })
-
-        chosenGene = self.randomState.choice(genesIntoRoot)
-        selectedCoalescentProcess = self.__selectCoalescentProcess(
-            fullCoalescentProcess, chosenGene)
         return fullCoalescentProcess, selectedCoalescentProcess, chosenGene
     
     """
