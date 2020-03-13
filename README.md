@@ -43,11 +43,15 @@ The simulator will run with the default setting and you should be able to see th
 gene tree:
                               /-A
                     /--------|
-          /--------|          \-B
+                   |         |          /-B
+          /--------|          \--------|
+         |         |                    \-A_locus0_event2
          |         |
 ---------|          \-E_locus0_event1
          |
-          \-E_locus0_event0
+         |          /-E_locus0_event0
+          \--------|
+                    \-E_locus1_event0_locus0_event0
 ```
 
 ##  Usage
@@ -90,14 +94,14 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -l 0.5
 e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -u 0.5 
 ```
   
-* Hemiplasy option: -h or --hemiplasy; whether or not the copy number hemiplasy is allowed, default: -h True
+* Hemiplasy option: -h or --hemiplasy; whether or not the copy number hemiplasy is allowed, default: -h 1
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -h False
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -h 0
 ```
   
-* Verbose option: -v or --verbose; detailed outputs for debugging purposes, default: -v False
+* Verbose option: -v or --verbose; detailed outputs for debugging purposes, default: -v 0
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -v True
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -v 1
 ```
 
 * Number of repeats: -n or --numRepeats; number of gene trees simulated, defult: -n 1
@@ -130,4 +134,4 @@ This project is licensed under the GNU GPLv3 - see [LICENSE.md](LICENSE.md) for 
 
 ## Acknowledgments
 
-QL would like to thank Yupei You, Yichi Zhang, and Yiling Cao for their undivided support and assistance with programming.
+QL would like to thank Yupei You, Yichi Zhang, and Yiling Cao for their undivided support with programming; and Celine Scornavacca, Yao-ban Chan for assistance in debugging.
