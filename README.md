@@ -119,9 +119,9 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 * Exception: ALL LOST: all gene lineages are lost, hence there is no gene tree generated.
   
 ### Output files
+* gene_tree.newick: final output for the end users, the final gene with internal node names removed and leaf names converted according to the names of species.
 * gene_tree_untruncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree before cutted from the loss points.
 * gene_tree_truncated.newick: intermediate output for debugging purposes, the fully labelled gene (with internal node names) tree after cutted from the loss points.
-* gene_tree.newick: final output for the end users, the final gene with internal node names removed and leaf names converted according to the names of species.
 
 ## Authors
 
