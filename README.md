@@ -71,27 +71,27 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -c 0.5
   
 * Recombination rate: -r or --recombinationRate; the recombiantion rate in linked coalescent, default: -r 0.5
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -r 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -r 0.3
 ```
   
 * Duplication rate: -d or --duplicationRate; occurrence rate of gene duplication, default: -d 0.2
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -d 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -d 0.1
 ```
   
 * Transfer rate; -t or --transferRate; occurrence rate of horizontal gene transfer, default: -t 0.1
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -t 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -t 0.2
 ```
   
 * Loss rate; -l or --lossRate; occurrence rate of gene loss, default: -l 0.2
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -l 0.5
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -l 0.1
 ```
   
 * Unlink probability; -u or --unlinkProb; the probability that a duplication is unlinked, default: -u 0.5
 ```
-e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -u 0.5 
+e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -u 0.3
 ```
   
 * Hemiplasy option: -h or --hemiplasy; whether or not the copy number hemiplasy is allowed, default: -h 1
@@ -134,4 +134,4 @@ This project is licensed under the GNU GPLv3 - see [LICENSE.md](LICENSE.md) for 
 
 ## Acknowledgments
 
-QL would like to thank Yupei You, Yichi Zhang, and Yiling Cao for their undivided support with programming, and Celine Scornavacca, Yao-ban Chan for assistance in debugging.
+QL would like to thank Yupei You, Yichi Zhang, and Yiling Cao for their undivided support with programming, and Celine Scornavacca, Yao-ban Chan for assistance with debugging.
