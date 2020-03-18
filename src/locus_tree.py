@@ -36,7 +36,7 @@ class LocusTree(SpeciesTree):
     generate a haplotype forest and a selected haplotype tree;
     here we don't store the haplotype forest as multiple trees,
     instead we augment the incomplete process to form a fullCoalescentProcess;
-    the process exceed the height of the locus tree will be discarded later on.
+    the process exceed the height of the locus tree will be discarded later.
     """
     def incompleteCoalescent(self, distanceAboveRoot):
         root = self.getRoot()
@@ -122,7 +122,7 @@ class LocusTree(SpeciesTree):
         cladeSetIntoRoot = None
 
         # leaves of the given species tree
-        oldLeaves = [node.id for node in nodes if not node.children]
+        currentLeaves = [node.id for node in nodes if not node.children]
         # leaves set will be updated in the loop
         newLeaves = []
 
@@ -146,7 +146,7 @@ class LocusTree(SpeciesTree):
         recomSets = fromSets.copy()
         
         while True:
-            for leaf in oldLeaves:
+            for leaf in currentLeaves:
                 # coalescent finished
                 if leaf == root.id:
                     cladeSetIntoRoot, _, _ = self.__speciesBranchRecurse(
@@ -214,15 +214,16 @@ class LocusTree(SpeciesTree):
                 break
 
             # delete repeated items in newLeaves 
-            tempNewLeaves = [] 
-            for newLeaf in newLeaves:
-                if newLeaf not in tempNewLeaves:
-                    tempNewLeaves.append(newLeaf)
+            # tempNewLeaves = [] 
+            # for newLeaf in newLeaves:
+            #     if newLeaf not in tempNewLeaves:
+            #         tempNewLeaves.append(newLeaf)
 
             # re-initialization for the next recursion
-            # oldLeaves <- newLeaves
+            # currentLeaves <- newLeaves
             # label <- false
-            oldLeaves = tempNewLeaves
+            # currentLeaves = tempNewLeaves
+            currentLeaves = newLeaves
             newLeaves = []
             labelled = {}
             for node in nodes:

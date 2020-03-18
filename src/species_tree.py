@@ -116,7 +116,7 @@ class SpeciesTree:
         cladeSetIntoRoot = None
 
         # leaves of the given species tree
-        oldLeaves = [node.id for node in nodes if not node.children]
+        currentLeaves = [node.id for node in nodes if not node.children]
 
         # leaves set will be updated in the loop
         newLeaves = []
@@ -138,7 +138,7 @@ class SpeciesTree:
                 [str(node.id) + '*'] if not node.children else []
 
         while True:
-            for leaf in oldLeaves:
+            for leaf in currentLeaves:
                 if leaf == root.id:
                     # coalescent finished
                     toSets[root.id] = self.__coalescentRecurse(
@@ -159,14 +159,12 @@ class SpeciesTree:
                     if (len(fromSets[children[0]]) != 0 
                         and len(fromSets[children[1]]) != 0):
                         toSets[children[0]] = self.__coalescentRecurse(
-                            branchLength=self.getNodeById(
-                                children[0]).distanceToParent,
+                            branchLength=self.getNodeById(children[0]).distanceToParent,
                             fromSet=fromSets[children[0]], 
                             subCoalescentProcess=coalescentProcess[children[0]])
                         labelled[children[0]] = True
                         toSets[children[1]] = self.__coalescentRecurse(
-                            branchLength=self.getNodeById(
-                                children[1]).distanceToParent,
+                            branchLength=self.getNodeById(children[1]).distanceToParent,
                             fromSet=fromSets[children[1]], 
                             subCoalescentProcess=coalescentProcess[children[1]])
                         labelled[children[1]] = True
@@ -188,15 +186,16 @@ class SpeciesTree:
                 break
 
             # delete repeated items in newLeaves 
-            tempNewLeaves = [] 
-            for newLeaf in newLeaves:
-                if newLeaf not in tempNewLeaves:
-                    tempNewLeaves.append(newLeaf)
+            # tempNewLeaves = [] 
+            # for newLeaf in newLeaves:
+            #     if newLeaf not in tempNewLeaves:
+            #         tempNewLeaves.append(newLeaf)
 
             # re-initialization for the next recursion
-            # oldLeaves <- newLeaves
+            # currentLeaves <- newLeaves
             # label <- false
-            oldLeaves = tempNewLeaves
+            # currentLeaves = tempNewLeaves
+            currentLeaves = newLeaves
             newLeaves = []
             labelled = {}
             for node in nodes:
@@ -224,9 +223,9 @@ class SpeciesTree:
             return toSet
         else:
             coalescentRate = self.binom(len(fromSet),2) * self.__coalescentRate
-            fakeDistance = self.randomState.exponential(scale=1.0/coalescentRate)
+            coalDistance = self.randomState.exponential(scale=1.0/coalescentRate)
             # no coalescent event anymore in this branch
-            if branchLength < fakeDistance:
+            if branchLength < coalDistance:
                 subCoalescentProcess.append({
                     'fromSet': fromSet,
                     'toSet': None,
@@ -237,29 +236,24 @@ class SpeciesTree:
             else:
                 # when coalescent, randomly merge 2 elements in the gene sets
                 # if there are more than one genes in the cladeSet, start merging
-                if len(fromSet) >= 2:
-                    # choose a couple, merge them, then put it back
-                    couple = self.randomState.choice(
-                        fromSet, size=2, replace=False)
-                    toSet = [''.join(self.sorted(couple, seperater='*'))] \
-                        + [e for e in fromSet if e not in couple]
+                # choose a couple, merge them, then put it back
+                couple = self.randomState.choice(
+                    fromSet, size=2, replace=False)
+                toSet = [''.join(self.sorted(couple, seperater='*'))] \
+                    + [e for e in fromSet if e not in couple]
 
-                    # save process
-                    subCoalescentProcess.append({
-                        'fromSet': fromSet,
-                        'toSet': toSet,
-                        'distance': fakeDistance
-                    })
-                    branchLength = branchLength - fakeDistance
-                    # use recursion to simulate the case when there is
-                    # more than one coalescent events in the branch
-                    return self.__coalescentRecurse(
-                        branchLength=branchLength, fromSet=toSet, 
-                        subCoalescentProcess=subCoalescentProcess)
-                else:
-                    # stop when cladeSet only has one element
-                    toSet = fromSet
-                    return toSet         
+                # save process
+                subCoalescentProcess.append({
+                    'fromSet': fromSet,
+                    'toSet': toSet,
+                    'distance': coalDistance
+                })
+                branchLength = branchLength - coalDistance
+                # use recursion to simulate the case when there is
+                # more than one coalescent events in the branch
+                return self.__coalescentRecurse(
+                    branchLength=branchLength, fromSet=toSet, 
+                    subCoalescentProcess=subCoalescentProcess)      
 
     def getTimeSequences(self, coalescentProcess):
         """
