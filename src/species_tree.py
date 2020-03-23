@@ -12,6 +12,7 @@ class SpeciesTree:
     def __init__(self, randomState):
         self.__randomState = randomState
         self.__treeTable = None
+        self.__distanceAboveRoot = float('inf')
         self.__coalescentRate = None
         self.__recombinationRate = None
 
@@ -31,6 +32,13 @@ class SpeciesTree:
     @treeTable.setter
     def treeTable(self, treeTable):
         self.__treeTable = treeTable
+
+    @property
+    def distanceAboveRoot(self):
+        return self.__distanceAboveRoot
+    @distanceAboveRoot.setter
+    def distanceAboveRoot(self, distanceAboveRoot):
+        self.__distanceAboveRoot = distanceAboveRoot
 
     @property
     def coalescentRate(self):

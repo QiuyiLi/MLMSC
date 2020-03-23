@@ -50,16 +50,15 @@ class LocusTree(SpeciesTree):
         distance = fullCoalescentProcess[root.id][-1]['distance']
         fullCoalescentProcess[root.id].pop()
         while len(fromSet) >= 2:
-            temp_set = fromSet
             couple = self.randomState.choice(
                 fromSet, size=2, replace=False)
             toSet = [''.join(self.sorted(couple, seperater='*'))] \
                 + [e for e in fromSet if e not in couple]
             # save process
-            coalescentRate = self.binom(len(temp_set),2) * self.coalescentRate
+            coalescentRate = self.binom(len(fromSet),2) * self.coalescentRate
             coalDistance = self.randomState.exponential(scale=1.0/coalescentRate)
             fullCoalescentProcess[root.id].append({
-                'fromSet': temp_set,
+                'fromSet': fromSet,
                 'toSet': toSet,
                 'distance': coalDistance+distance
             })
@@ -410,12 +409,8 @@ class LocusTree(SpeciesTree):
                     distanceToAdd += distance
                     if not coalSet:
                         coalSet = []
-                    else: 
-                        coalSet = coalSet
                     if not recomSet:
                         recomSet = []
-                    else:
-                        recomSet = recomSet
             return toSet, coalSet, recomSet, distanceToAdd
 
     """
@@ -469,7 +464,7 @@ class LocusTree(SpeciesTree):
 
     """
     filter out the copied genes in the coalescent process
-    and change the seperator of the genes from '#' to '*'
+    and change the seperator of genes from '#' to '*'
     """
     def __filteredLinkedCoalescentProcess(self, coalescentProcess, cladeSetIntoRoot):
         filteredProcess = defaultdict(list)
