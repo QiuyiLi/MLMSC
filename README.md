@@ -6,7 +6,7 @@ The input for MLMSC Simulator are the simulation parameters and a pre-specified 
 ## Citation
 If you use the MLMSC simulator, please cite:
 
---To be listed--
+The Multilocus Multispecies Coalescent: A Flexible New Model of Gene Family Evolution; Qiuyi Li, Nicolas Galtier, Celine Scornavacca, Yao-Ban Chan; bioRxiv 2020.05.07.081836; doi: https://doi.org/10.1101/2020.05.07.081836
 
 ## Obtaining the program
 
