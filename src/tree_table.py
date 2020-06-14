@@ -195,7 +195,13 @@ class TreeTable:
                 queue.push(treeNode.parent)
 
         # create entry for each tree node and store in the table
+        # for treeNode in skbioTree.traverse():
+        #     print(treeNode.name, treeNode.id, treeNode.length)
         for treeNode in skbioTree.traverse():
+            # if '*' in treeNode.name:
+            #     splited = treeNode.name.split('*')[:-1]
+            #     splited = sorted([int(e) for e in splited])
+            #     treeNode.name = ''.join([str(e) + '*' for e in splited])
             entry = TreeTableEntry()
             entry.id = treeNode.id
             entry.name = treeNode.name

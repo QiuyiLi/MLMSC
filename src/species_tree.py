@@ -4,6 +4,7 @@ import math
 from collections import defaultdict
 from statistics import mean
 from .tree_table import *
+# import pprint
 
 class SpeciesTree:
     """
@@ -293,6 +294,7 @@ class SpeciesTree:
                         geneNodeName = mergingSet['fromSet'][0]
                         break
                     break
+        # pprint.pprint(timeSequences)
         return timeSequences, geneNodeName
 
 

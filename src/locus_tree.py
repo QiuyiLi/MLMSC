@@ -1,6 +1,7 @@
 import copy
 from .species_tree import *
 from .tree_table import *
+import pprint
 
 class LocusTree(SpeciesTree):
 
@@ -39,9 +40,11 @@ class LocusTree(SpeciesTree):
     the process exceed the height of the locus tree will be discarded later.
     """
     def incompleteCoalescent(self, distanceAboveRoot):
+        incomplete = True
         root = self.getRoot()
         fullCoalescentProcess, genesIntoRoot = self.coalescent(distanceAboveRoot)
-
+        if len(genesIntoRoot) == 1:
+            incomplete = False
         chosenGene = self.randomState.choice(genesIntoRoot)
         selectedCoalescentProcess = self.__selectCoalescentProcess(
             fullCoalescentProcess, chosenGene)
@@ -69,7 +72,7 @@ class LocusTree(SpeciesTree):
                 'toSet': None,
                 'distance': float('inf')
         })
-        return fullCoalescentProcess, selectedCoalescentProcess, chosenGene
+        return fullCoalescentProcess, selectedCoalescentProcess, chosenGene, incomplete
     
     """
     seclect a haplotype tree from the haplotype forest
@@ -115,6 +118,7 @@ class LocusTree(SpeciesTree):
     while the new gene is represented by id#.
     """
     def linkedCoalescent(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
+        incomplete = True
         nodes = self.getNodes()
         root = self.getRoot()
         coalescentProcess = defaultdict(list)
@@ -240,35 +244,48 @@ class LocusTree(SpeciesTree):
                             ancestralClades.append(clade)
                             break
         fullClades = ancestralClades + nonAncestralClades
+        if len(cladeSetIntoRoot) == 1:
+            incomplete = False
         chosenGeneName = self.randomState.choice(cladeSetIntoRoot)
 
         filteredProcess, filteredClades = self.__filteredLinkedCoalescentProcess(
             coalescentProcess, cladeSetIntoRoot)
 
         fullProcess = copy.deepcopy(filteredProcess)
-        fromSet = fullProcess[root.id][-1]['fromSet']
-        distance = fullProcess[root.id][-1]['distance']
-        fullProcess[root.id].pop()
-        while len(fromSet) >= 2:
-            couple = self.randomState.choice(
-                fromSet, size=2, replace=False)
-            toSet = [''.join(self.sorted(couple, seperater='*'))] \
-                + [e for e in fromSet if e not in couple]
-            # save process
-            coalescentRate = self.binom(len(fromSet),2) * self.coalescentRate
-            coalDistance = self.randomState.exponential(scale=1.0/coalescentRate)
+        # pprint.pprint(copiedHaplotypeTree)
+        # pprint.pprint(fullProcess)
+        # print(root.id)
+        if fullProcess[root.id]:
+            fromSet = fullProcess[root.id][-1]['fromSet']
+            distance = fullProcess[root.id][-1]['distance']
+            fullProcess[root.id].pop()
+            while len(fromSet) >= 2:
+                couple = self.randomState.choice(
+                    fromSet, size=2, replace=False)
+                toSet = [''.join(self.sorted(couple, seperater='*'))] \
+                    + [e for e in fromSet if e not in couple]
+                # save process
+                coalescentRate = self.binom(len(fromSet),2) * self.coalescentRate
+                coalDistance = self.randomState.exponential(scale=1.0/coalescentRate)
+                fullProcess[root.id].append({
+                    'fromSet': fromSet,
+                    'toSet': toSet,
+                    'distance': coalDistance+distance
+                })
+                distance = 0
+                fromSet = toSet
             fullProcess[root.id].append({
-                'fromSet': fromSet,
-                'toSet': toSet,
-                'distance': coalDistance+distance
+                    'fromSet': fromSet,
+                    'toSet': None,
+                    'distance': float('inf')
             })
-            distance = 0
-            fromSet = toSet
-        fullProcess[root.id].append({
-                'fromSet': fromSet,
-                'toSet': None,
-                'distance': float('inf')
-        })
+        else:
+            fullProcess, selectedProcess, chosenGeneName, incomplete = self.incompleteCoalescent(distanceAboveRoot)
+            ancestral = False
+            geneNodeName = chosenGeneName
+            # return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral, incomplete
+            return fullProcess, selectedProcess, chosenGeneName, None, ancestral, incomplete
+
 
         if chosenGeneName in fullClades:
             ancestral = False
@@ -280,10 +297,10 @@ class LocusTree(SpeciesTree):
             
             selectedProcess = self.__selectCoalescentProcess(filteredProcess, chosenGeneName)
 
-            return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral
+            return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral, incomplete
         else: 
             # discad the unobservable ancestral duplication
-            return fullProcess, None, None, None, True
+            return fullProcess, None, None, None, True, incomplete
 
     """
     linked coalescent within a gene branch
@@ -362,15 +379,18 @@ class LocusTree(SpeciesTree):
                 if copiedProcess['toSet']:
                     if self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet']):
                         [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
+                        # print([coupleL, coupleR])
                         for e in fromSet:
-                            if coupleL in e:
+                            if coupleL.split('*')[0] in e.split('*')[:-1]:
                                 coupleL = e
-                            elif coupleR in e:
+                            elif coupleR.split('*')[0] in e.split('*')[:-1]:
                                 coupleR = e
                             else:
                                 continue
                         couple = ''.join([coupleL, coupleR])
                         starString, checkString, mergedString = self.__getBipartition(couple)
+                        # print(toSet)
+                        # print(coupleL, coupleR)
                         toSet.remove(coupleL)
                         toSet.remove(coupleR)
                         toSet.append(mergedString)

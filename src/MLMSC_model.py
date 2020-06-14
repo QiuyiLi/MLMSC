@@ -70,9 +70,10 @@ class MLMSC_Model:
                 initial=True)
 
             # add new loci
-            geneTree = originalHaplotypeTree.addNewLoci(events=events, 
-                haplotypeTree=originalHaplotypeTree, level=0)
+            geneTree, completeCount, incompleteCount = originalHaplotypeTree.addNewLoci(events=events, 
+                haplotypeTree=originalHaplotypeTree, level=0, completeCount=1, incompleteCount=0)
             geneSkbioTree = geneTree.getSkbioTree()
+            print(completeCount, incompleteCount)
 
             # cut the tree at losses
             geneTreeTruncated = geneTree
@@ -104,7 +105,8 @@ class MLMSC_Model:
                         speciesId = int(node.name.split('*')[0])
                         remainder = node.name.split('*')[1]
                         speciesNode = self.speciesTree.getNodeById(speciesId)
-                        node.name = speciesNode.name + remainder
+                        # node.name = speciesNode.name + remainder
+                        node.name = speciesNode.name
                     else:
                         node.name = ''
 
