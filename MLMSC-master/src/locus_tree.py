@@ -1,7 +1,6 @@
 import copy
 from .species_tree import *
 from .tree_table import *
-import pprint
 
 class LocusTree(SpeciesTree):
 
@@ -40,11 +39,9 @@ class LocusTree(SpeciesTree):
     the process exceed the height of the locus tree will be discarded later.
     """
     def incompleteCoalescent(self, distanceAboveRoot):
-        incomplete = True
         root = self.getRoot()
         fullCoalescentProcess, genesIntoRoot = self.coalescent(distanceAboveRoot)
-        if len(genesIntoRoot) == 1:
-            incomplete = False
+
         chosenGene = self.randomState.choice(genesIntoRoot)
         selectedCoalescentProcess = self.__selectCoalescentProcess(
             fullCoalescentProcess, chosenGene)
@@ -72,7 +69,7 @@ class LocusTree(SpeciesTree):
                 'toSet': None,
                 'distance': float('inf')
         })
-        return fullCoalescentProcess, selectedCoalescentProcess, chosenGene, incomplete
+        return fullCoalescentProcess, selectedCoalescentProcess, chosenGene
     
     """
     seclect a haplotype tree from the haplotype forest
@@ -118,7 +115,6 @@ class LocusTree(SpeciesTree):
     while the new gene is represented by id#.
     """
     def linkedCoalescent(self, copiedHaplotypeTree, copiedRootGene, distanceAboveRoot):
-        incomplete = True
         nodes = self.getNodes()
         root = self.getRoot()
         coalescentProcess = defaultdict(list)
@@ -244,24 +240,12 @@ class LocusTree(SpeciesTree):
                             ancestralClades.append(clade)
                             break
         fullClades = ancestralClades + nonAncestralClades
-        if len(cladeSetIntoRoot) == 1:
-            incomplete = False
         chosenGeneName = self.randomState.choice(cladeSetIntoRoot)
 
         filteredProcess, filteredClades = self.__filteredLinkedCoalescentProcess(
             coalescentProcess, cladeSetIntoRoot)
 
         fullProcess = copy.deepcopy(filteredProcess)
-        # pprint.pprint(copiedHaplotypeTree)
-        # pprint.pprint(fullProcess)
-        # print(root.id)
-
-        # if fullProcess[root.id]:
-            # print('+'*40)
-            # pprint.pprint(copiedHaplotypeTree)
-            # pprint.pprint(coalescentProcess)
-            # pprint.pprint(fullProcess)
-            # print(root.id)
         fromSet = fullProcess[root.id][-1]['fromSet']
         distance = fullProcess[root.id][-1]['distance']
         fullProcess[root.id].pop()
@@ -285,18 +269,6 @@ class LocusTree(SpeciesTree):
                 'toSet': None,
                 'distance': float('inf')
         })
-        # else:
-        #     print('='*40)
-        #     pprint.pprint(copiedHaplotypeTree)
-        #     pprint.pprint(coalescentProcess)
-        #     pprint.pprint(fullProcess)
-        #     print(root.id)
-        #     fullProcess, selectedProcess, chosenGeneName, incomplete = self.incompleteCoalescent(distanceAboveRoot)
-        #     ancestral = False
-        #     geneNodeName = chosenGeneName
-        #     # return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral, incomplete
-        #     return fullProcess, selectedProcess, chosenGeneName, None, ancestral, incomplete
-
 
         if chosenGeneName in fullClades:
             ancestral = False
@@ -308,10 +280,10 @@ class LocusTree(SpeciesTree):
             
             selectedProcess = self.__selectCoalescentProcess(filteredProcess, chosenGeneName)
 
-            return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral, incomplete
+            return fullProcess, selectedProcess, chosenGeneName, geneNodeName, ancestral
         else: 
             # discad the unobservable ancestral duplication
-            return fullProcess, None, None, None, True, incomplete
+            return fullProcess, None, None, None, True
 
     """
     linked coalescent within a gene branch
@@ -390,18 +362,15 @@ class LocusTree(SpeciesTree):
                 if copiedProcess['toSet']:
                     if self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet']):
                         [coupleL, coupleR] = self.__getDifference(copiedProcess['fromSet'], copiedProcess['toSet'])
-                        # print([coupleL, coupleR])
                         for e in fromSet:
-                            if coupleL.split('*')[0] in e.split('*')[:-1]:
+                            if coupleL in e:
                                 coupleL = e
-                            elif coupleR.split('*')[0] in e.split('*')[:-1]:
+                            elif coupleR in e:
                                 coupleR = e
                             else:
                                 continue
                         couple = ''.join([coupleL, coupleR])
                         starString, checkString, mergedString = self.__getBipartition(couple)
-                        # print(toSet)
-                        # print(coupleL, coupleR)
                         toSet.remove(coupleL)
                         toSet.remove(coupleR)
                         toSet.append(mergedString)

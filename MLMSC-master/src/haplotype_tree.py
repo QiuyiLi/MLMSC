@@ -17,8 +17,7 @@ class HaplotypeTree:
 
         self.__coalescentProcess = None
         self.__fullCoalescentProcess = None
-        # self.__treeTable = None
-        self.__treeTable: TreeTable = None
+        self.__treeTable = None
         self.__parameters = {}
 
     def __repr__(self):
@@ -152,7 +151,7 @@ class HaplotypeTree:
     # utility function used in __createSkbioTreeRecurse
     def __distanceToParent(self, nodeName, parentName, timeSequences):
         for leaf, sequence in timeSequences.items():
-            if (nodeName.count('*') == 1 and nodeName.split('*')[0] == str(leaf)):
+            if (nodeName.count('*') == 1 and nodeName[0] == str(leaf)):
                 for pair in sequence:
                     if pair[0] == parentName:
                         return pair[1]
@@ -179,12 +178,11 @@ class HaplotypeTree:
             skbioTree.length = self.__distanceToParent(
                 nodeName=skbioTree.name, parentName=skbioTree.parent.name, 
                 timeSequences=timeSequences)
-            # print(skbioTree.name, skbioTree.parent.name)
             return
         # two nodes case (trivial)
-        elif skbioTree.name.count('*') == 2:
-            childLName = skbioTree.name.split('*')[0] + '*'
-            childRName = skbioTree.name.split('*')[1] + '*'
+        elif len(skbioTree.name) == 4:
+            childLName = skbioTree.name[:2]
+            childRName = skbioTree.name[2:]
             childL = skbio.tree.TreeNode(
                 name=childLName, 
                 length=self.__distanceToParent(
@@ -207,14 +205,8 @@ class HaplotypeTree:
                 for pair in sequence:
                     if (prevPair != None and skbioTree.name == pair[0]):
                         childLName = prevPair[0]
-                        splited = childLName.split('*')[:-1]
-                        splited = sorted([int(e) for e in splited])
-                        childLName = ''.join([str(e) + '*' for e in splited])
-
-                        childRName = self.__starReplace(skbioTree.name, prevPair[0])
-                        splited = childRName.split('*')[:-1]
-                        splited = sorted([int(e) for e in splited])
-                        childRName = ''.join([str(e) + '*' for e in splited])
+                        childRName = self.__starReplace(
+                            skbioTree.name, prevPair[0])
                         childL = skbio.tree.TreeNode(
                             name=childLName, 
                             length=self.__distanceToParent(
@@ -440,7 +432,7 @@ class HaplotypeTree:
                         and geneName not in mergingSet['fromSet']):
                         speciesId = speciesNodeId
             if speciesId == None:
-                speciesId = int(geneName[:-1])     
+                speciesId = int(geneName[:-1])    
         return speciesId 
 
     def __findTransferOrigin(self, eventHeight, geneId):    
@@ -521,11 +513,9 @@ class HaplotypeTree:
             newCoalescentTreeEventsUD = coalescentTreeUD.Dprocess(unlinked=True,
                 distanceAboveRoot=rootLength, threshold=threshold, event=event)
 
-            # print('='*40)
-            # pprint.pprint(self.fullCoalescentProcess)
             coalescentTreeProcessLD = locusTree.linkedCoalescent(
-                copiedHaplotypeTree=haplotypeTree.fullCoalescentProcess, copiedRootGene=None,
-                distanceAboveRoot=haplotypeTree.getTreeHeight()-locusTree.getTreeHeight())[0]
+                copiedHaplotypeTree=self.fullCoalescentProcess, copiedRootGene=None,
+                distanceAboveRoot=self.getTreeHeight()-locusTree.getTreeHeight())[0]
             locusRootId = locusTree.getRoot().id
             coalescentTreeLD = HaplotypeTree(
                 randomState=self.randomState, 
@@ -578,8 +568,6 @@ class HaplotypeTree:
         # newEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
         newCoalescentTreeEvents = newCoalescentTreeEventsUD + newCoalescentTreeEventsLD + \
             newCoalescentTreeEventsT
-        # newCoalescentTreeEvents = newCoalescentTreeEventsUD + \
-        #     newCoalescentTreeEventsT
         newCoalescentTreeEvents.sort(reverse=True, key=lambda x: x['eventHeight'])
         newEvents = newCoalescentTreeEvents + haplotypeTreeEvents
         return newEvents
@@ -696,7 +684,7 @@ class HaplotypeTree:
             # no coalescent
             return None, None, None
 
-    def addNewLoci(self, events, haplotypeTree, level, completeCount, incompleteCount):
+    def addNewLoci(self, events, haplotypeTree, level):
         """
         1. simulate events on the current locus tree 
         2. construct the corresponding new locus tree
@@ -716,12 +704,10 @@ class HaplotypeTree:
                 speciesId = event['speciesNodeId']
                 distanceAboveSpeciesNode = event['distanceToSpeciesNode']
 
-                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral, completeCount, incompleteCount = \
-                    self.__addNewLociRecurse(haplotypeTree=haplotypeTree,
+                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral = \
+                    self.__addNewLociRecurse(
                     event=event, newLocusRootId=speciesId,
-                    distanceAboveRoot=distanceAboveSpeciesNode, 
-                    level=level, completeCount=completeCount,
-                    incompleteCount=incompleteCount)
+                    distanceAboveRoot=distanceAboveSpeciesNode, level=level)
 
                 if newHaplotypeTree:
                     verbose = self.parameters['v']
@@ -849,12 +835,9 @@ class HaplotypeTree:
                 transferTargetId = event['targetSpeciesId']
                 targetHeight = self.speciesTree.getDistanceToLeaf(transferTargetId)
                 distanceAboveTarget = event['eventHeight'] - targetHeight
-                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral, completeCount, incompleteCount = \
-                    self.__addNewLociRecurse(haplotypeTree=haplotypeTree,
+                newHaplotypeTree, chosenGeneName, geneNodeName, ancestral = self.__addNewLociRecurse(
                     event=event, newLocusRootId=transferTargetId,
-                    distanceAboveRoot=distanceAboveTarget, 
-                    level=level, completeCount=completeCount,
-                    incompleteCount=incompleteCount)
+                    distanceAboveRoot=distanceAboveTarget, level=level)
                 
                 if newHaplotypeTree:
 
@@ -918,22 +901,13 @@ class HaplotypeTree:
                         if verbose:
                             print('haplotype tree after:')	
                             print(haplotypeTree.getSkbioTree().ascii_art())
-        return haplotypeTree, completeCount, incompleteCount
+        return haplotypeTree
 
-    def __addNewLociRecurse(self, haplotypeTree, event, newLocusRootId, distanceAboveRoot, level, completeCount, incompleteCount):
+    def __addNewLociRecurse(self, event, newLocusRootId, distanceAboveRoot, level):
         copiedFullProcess = self.fullCoalescentProcess
-        # print('1'*40)
-        # print(self.fullCoalescentProcess)
-        # print(haplotypeTree.fullCoalescentProcess)
-        # print('2'*40)
-        if self.fullCoalescentProcess != haplotypeTree.fullCoalescentProcess:
-            print('!'*40)
 
         if (event['type'] == 'duplication' or event['type'] == 'transfer'): 
             # for transfer nodeId = target_id
-            # if self.fullCoalescentProcess != hapTree.fullCoalescentProcess:
-            #     print('!'*40)
-            #     print(hapTree.treeTable)
             speciesSkbioTree = self.speciesTree.getSkbioTree()
             newLocusRootName = self.speciesTree.getNodeById(newLocusRootId).name
 
@@ -941,8 +915,6 @@ class HaplotypeTree:
             newLocusTreeNames = [node.name for node in newLocusSkbioTree.traverse()]
             newLocusTreeNodes = [node for node in self.speciesTree.getNodes() 
                 if node.name in newLocusTreeNames]
-            # if len(newLocusTreeNodes) == 1 and event['type'] == 'transfer':
-            #     print('find a transfer target at leaf!')
             newLocusTree = LocusTree(randomState=self.randomState)
             newLocusTree.initialize(nodes=newLocusTreeNodes, skbioTree=newLocusSkbioTree)
             newLocusTree.coalescentRate = self.speciesTree.coalescentRate
@@ -958,14 +930,8 @@ class HaplotypeTree:
                 ancestral = False
                 hemiplasy = self.__parameters['h']
                 if hemiplasy == 1:
-                    fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName, incomplete = \
+                    fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName = \
                         newLocusTree.incompleteCoalescent(distanceAboveRoot)
-                    # if len(newLocusTreeNodes) == 1 and event['type'] == 'transfer':
-                    #     print('fullcoalprocess (trivial) for the same transfer')
-                    #     print(fullCoalescentProcess)
-                    completeCount += 1
-                    if incomplete:
-                        incompleteCount += 1
                 elif hemiplasy == 0:
                     selectedCoalescentProcess = \
                         newLocusTree.boundedCoalescent(distanceAboveRoot)
@@ -981,20 +947,13 @@ class HaplotypeTree:
                         continue
                     else:
                         copiedRootGene = e['fromSet']
-                # if len(newLocusTreeNodes) == 1 and event['type'] == 'duplication':
-                #     print('linked dup in the transfer locus')
-                    # pprint.pprint(self.fullCoalescentProcess)
-                fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName, geneNodeName, ancestral, incomplete = \
+                fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName, geneNodeName, ancestral = \
                     newLocusTree.linkedCoalescent(
                     copiedHaplotypeTree=copiedFullProcess, 
                     copiedRootGene=copiedRootGene,
                     distanceAboveRoot=distanceAboveRoot)
-                # print('pass')
-                completeCount += 1
-                if incomplete:
-                    incompleteCount += 1
                 if not selectedCoalescentProcess:
-                    return None, None, None, ancestral, completeCount, incompleteCount
+                    return None, None, None, ancestral
 
             newHaplotypeTree = HaplotypeTree(
                 randomState=self.randomState, 
@@ -1016,8 +975,8 @@ class HaplotypeTree:
                 rootLength=rootLength)
 
             newHaplotypeTree.addNewLoci(events=newEvents, haplotypeTree=newHaplotypeTree, 
-                level=level + 1, completeCount=completeCount, incompleteCount=incompleteCount)
-            return newHaplotypeTree, chosenGeneName, geneNodeName, ancestral, completeCount, incompleteCount
+                level=level + 1)
+            return newHaplotypeTree, chosenGeneName, geneNodeName, ancestral
 
     """
     unused functions
