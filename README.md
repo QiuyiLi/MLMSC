@@ -126,7 +126,9 @@ e.g., python3 MLMSC.py -i species_trees/species_tree_0.newick -s 0
 ## Authors
 
 * **Qiuyi Li** - *Initial work*
-* **Geoffrey Law** - *Data structure*
+* **[Geoffrey Law](https://github.com/luojiahai)** - *Data structure*
+
+
 
 ## License
 
