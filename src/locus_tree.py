@@ -123,6 +123,9 @@ class LocusTree(SpeciesTree):
         root = self.getRoot()
         coalescentProcess = defaultdict(list)
         cladeSetIntoRoot = None
+        # pprint.pprint(copiedHaplotypeTree)
+        # print(root.id)
+        # print(locusRootId)
 
         # leaves of the given species tree
         currentLeaves = [node.id for node in nodes if not node.children]
@@ -256,12 +259,11 @@ class LocusTree(SpeciesTree):
         # pprint.pprint(fullProcess)
         # print(root.id)
 
-        # if fullProcess[root.id]:
-            # print('+'*40)
-            # pprint.pprint(copiedHaplotypeTree)
-            # pprint.pprint(coalescentProcess)
-            # pprint.pprint(fullProcess)
-            # print(root.id)
+        # if not fullProcess[root.id]:
+        #     pprint.pprint(copiedHaplotypeTree)
+        #     pprint.pprint(coalescentProcess)
+        #     pprint.pprint(fullProcess)
+        #     print(root)
         fromSet = fullProcess[root.id][-1]['fromSet']
         distance = fullProcess[root.id][-1]['distance']
         fullProcess[root.id].pop()
@@ -286,7 +288,6 @@ class LocusTree(SpeciesTree):
                 'distance': float('inf')
         })
         # else:
-        #     print('='*40)
         #     pprint.pprint(copiedHaplotypeTree)
         #     pprint.pprint(coalescentProcess)
         #     pprint.pprint(fullProcess)
@@ -534,6 +535,7 @@ class LocusTree(SpeciesTree):
                 newClade = self.__starReplace(newClade)
                 filteredClades.append(newClade)
         return filteredProcess, filteredClades
+
 
     """""""""""""""""""""""""""""""""""""""
     utility functions for linkedCoalescent

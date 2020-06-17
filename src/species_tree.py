@@ -362,8 +362,4 @@ class SpeciesTree:
             for index in splited:
                 indices.append(int(index))
         return mean(self.coalescentRate[indices])
-
-
-        
-
     

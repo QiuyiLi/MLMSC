@@ -109,7 +109,7 @@ class MLMSC_Model:
                         node.name = speciesNode.name
                     else:
                         node.name = ''
-
+                        
                 # visualization
                 if self.__parameters['verbose']:
                     # visualizing the untruncated tree
