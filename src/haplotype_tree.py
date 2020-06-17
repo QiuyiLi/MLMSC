@@ -993,7 +993,6 @@ class HaplotypeTree:
                         continue
                     else:
                         copiedRootGene = e['fromSet']
-
                 fullCoalescentProcess, selectedCoalescentProcess, chosenGeneName, geneNodeName, ancestral, incomplete = \
                     newLocusTree.linkedCoalescent(
                     copiedHaplotypeTree=copiedFullProcess, 

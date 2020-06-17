@@ -224,10 +224,14 @@ class MLMSC_Model:
         self.speciesTree.setRecombinationRate(
             recombinationPrmt=self.parameters['recombination'])
 
-        # if self.__parameters['verbose']:
-        print('species tree:')	
-        print(self.speciesTree)	
-        print(self.speciesTree.getSkbioTree().ascii_art())	
+        if self.__parameters['verbose']:
+            print('species tree:')	
+            print(self.speciesTree)	
+            print(self.speciesTree.getSkbioTree().ascii_art())
+        else:
+            print('species tree:')	
+            print(self.speciesTree.getSkbioTree().ascii_art())
+
 
     def constructOriginalLocusTree(self):
         locusTree = LocusTree(randomState=self.randomState)
