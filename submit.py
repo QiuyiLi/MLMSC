@@ -25,6 +25,7 @@ n = int(args.split('N')[1].split('D')[0])
 d = float(args.split('D')[1].split('L')[0])
 l = float(args.split('L')[1].split('C')[0])
 c = int(args.split('C')[1].split('P')[0])
+p = int(args.split('P')[1])
 
 mlmsc_command = 'python3 MLMSC.py -i species_trees/fungi.newick -n ' + str(n) + ' -d ' + str(0.001*d) + ' -l ' + str(0.001*l) + ' -c ' + str(1/c) + ' -u 1'
 
