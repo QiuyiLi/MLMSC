@@ -1,0 +1,8 @@
+import sys
+import os
+
+names = ['N50000D5.7L4.9C9P1', 'N50000D5.7L4.9C9P2', 'N50000D5L5C9P1', 'N50000D5L5C9P2', 'N50000D4L4C9P1', 'N50000D4L4C9P2', 'N50000D3L3C9P1', 'N50000D3L3C9P2', 'N50000D2L2C9P1', 'N50000D2L2C9P2', 'N50000D1L1C9P1', 'N50000D1L1C9P2', 'N50000D0L0C9P1', 'N50000D0L0C9P2']
+for name in names:
+    fileName = name + '.slurm'
+    print(fileName + ":")
+    os.system('sbatch ' + fileName) 
