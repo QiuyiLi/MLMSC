@@ -1,1 +1,0 @@
-n_qtree,p_0,p_1,n_d,n_genes,n_species
