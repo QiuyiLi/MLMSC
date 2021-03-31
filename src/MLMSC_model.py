@@ -1,8 +1,10 @@
+import os
 import numpy as np
 from .species_tree import *
 from .locus_tree import *
 from .haplotype_tree import *
 from .exception import *
+from collections import defaultdict
 
 class MLMSC_Model:
     def __init__(self, seed=None):
@@ -44,21 +46,31 @@ class MLMSC_Model:
         # read a species tree from input file
         self.readSpeciesTree(inputFile)
 
-        f = open('./output/gene_tree_untruncated.newick','w')
-        f.write('')
-        f.close()
+        outputDir = './output'
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir)
 
-        f = open('./output/gene_tree_truncated.newick','w')
-        f.write('')
-        f.close()
+        files = os.listdir(outputDir)
+        if 'gene_tree_untruncated.newick' not in files:
+            f = open(outputDir + '/gene_tree_untruncated.newick','w')
+            f.write('')
+            f.close()
 
-        f = open('./output/gene_tree.newick','w')
-        f.write('')
-        f.close()
+        if 'gene_tree_truncated.newick' not in files:
+            f = open(outputDir + '/gene_tree_truncated.newick','w')
+            f.write('')
+            f.close()
 
-        for i in range(repeatNumber):
+        if 'gene_tree.newick' not in files:
+            f = open(outputDir + '/gene_tree.newick','w')
+            f.write('')
+            f.close()
+
+        i = 1 
+
+        while i <= repeatNumber:
             if repeatNumber > 1:
-                print('Tree ' + str(i+1) + ' of ' + str(repeatNumber) + ':')
+                print('Tree ' + str(i) + ' of ' + str(repeatNumber) + ':')
             # the original locus tree is the same as the species tree
             originalLocusTree = self.constructOriginalLocusTree()
             # construct the original haplotype tree according to the species tree
@@ -70,34 +82,35 @@ class MLMSC_Model:
                 initial=True)
 
             # add new loci
-            geneTree, completeCount, incompleteCount = originalHaplotypeTree.addNewLoci(events=events, 
-                haplotypeTree=originalHaplotypeTree, level=0, completeCount=1, incompleteCount=0)
+            geneTree, completeCount, incompleteCount, unlinked_d_number_total, unlinked_d_number_survived = \
+                originalHaplotypeTree.addNewLociShell(events=events, 
+                haplotypeTree=originalHaplotypeTree, level=0, completeCount=1, incompleteCount=0, unlinked_d_number_total=0, unlinked_d_number_survived=0)
             geneSkbioTree = geneTree.getSkbioTree()
-            print(completeCount, incompleteCount)
-
             # cut the tree at losses
             geneTreeTruncated = geneTree
+
+            # for node in geneSkbioTree.traverse():
+            #     if node not in geneSkbioTree.tips():
+            #         node.name = ''
+            # f = open(outputDir + '/full_name.newick','a')
+            # string = str(geneSkbioTree)
+            # for char in string:
+            #     if char == "'":
+            #         continue
+            #     else:
+            #         f.write(char)
+            # f.close()
             geneSkbioTreeTruncated = geneSkbioTree.deepcopy()
             geneSkbioTreeTruncated = self.cutTree(geneSkbioTreeTruncated)
+
             for node in geneSkbioTreeTruncated.traverse():
                 if 'loss' in node.name:
                     geneSkbioTreeTruncated.remove_deleted(
                         lambda x: x.name == node.name)
             geneSkbioTreeTruncated.prune()
             if not geneSkbioTreeTruncated:
-                print('Exception: ALL LOST')
-                # save newick to file
-                f = open('./output/gene_tree_untruncated.newick','a')
-                f.write(str(geneSkbioTree))
-                f.close()
-
-                f = open('./output/gene_tree_truncated.newick','a')
-                f.write('')
-                f.close()
-
-                f = open('./output/gene_tree.newick','a')
-                f.write('')
-                f.close()
+                # print('none')
+                continue
             else:
                 geneSkbioTreeCleaned = geneSkbioTreeTruncated.deepcopy()
                 for node in geneSkbioTreeCleaned.traverse():
@@ -109,8 +122,10 @@ class MLMSC_Model:
                         node.name = speciesNode.name
                     else:
                         node.name = ''
-                        
+
+
                 # visualization
+                i = i + 1
                 if self.__parameters['verbose']:
                     # visualizing the untruncated tree
                     print('untruncated tree:')
@@ -134,15 +149,15 @@ class MLMSC_Model:
                     print('finished.')
 
                     # save newick to file
-                    f = open('./output/gene_tree_untruncated.newick','a')
+                    f = open(outputDir + '/gene_tree_untruncated.newick','a')
                     f.write(str(geneSkbioTree))
                     f.close()
 
-                    f = open('./output/gene_tree_truncated.newick','a')
+                    f = open(outputDir + '/gene_tree_truncated.newick','a')
                     f.write(str(geneSkbioTreeTruncated))
                     f.close()
 
-                    f = open('./output/gene_tree.newick','a')
+                    f = open(outputDir + '/gene_tree.newick','a')
                     string = str(geneSkbioTreeCleaned)
                     for char in string:
                         if char == "'":
@@ -156,17 +171,19 @@ class MLMSC_Model:
                         print(geneSkbioTreeCleaned.ascii_art())
                     else:
                         print('finished.')
-        
+
                     # save newick to file
-                    f = open('./output/gene_tree_untruncated.newick','a')
+                    
+                    f = open(outputDir + '/gene_tree_untruncated.newick','a')
+                    string = str(geneSkbioTree)
                     f.write(str(geneSkbioTree))
                     f.close()
 
-                    f = open('./output/gene_tree_truncated.newick','a')
+                    f = open(outputDir + '/gene_tree_truncated.newick','a')
                     f.write(str(geneSkbioTreeTruncated))
                     f.close()
 
-                    f = open('./output/gene_tree.newick','a')
+                    f = open(outputDir + '/gene_tree.newick','a')
                     string = str(geneSkbioTreeCleaned)
                     for char in string:
                         if char == "'":
@@ -228,9 +245,9 @@ class MLMSC_Model:
             print('species tree:')	
             print(self.speciesTree)	
             print(self.speciesTree.getSkbioTree().ascii_art())
-        else:
-            print('species tree:')	
-            print(self.speciesTree.getSkbioTree().ascii_art())
+        # else:
+        #     print('species tree:')	
+        #     print(self.speciesTree.getSkbioTree().ascii_art())
 
 
     def constructOriginalLocusTree(self):

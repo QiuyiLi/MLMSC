@@ -59,14 +59,14 @@ def readCommand(argv):
         help=default(
             'the unit rate of recombination'
             'e.g., "-r 0.5"'),
-        default=0.5)
+        default=0)
 
     parser.add_option(
         '-d', '--duplicationRate', type='float', dest='duplicationArgs',
         help=default(
             'the rate of occurence of duplications, '
             'e.g., "-d 0.2"'),
-        default=0.3)
+        default=0.1)
         
     parser.add_option(
         '-t', '--transferRate', type='float', dest='transferArgs',
@@ -85,7 +85,7 @@ def readCommand(argv):
     parser.add_option(
         '-u', '--unlinkProb', type='float', dest='unlinkArgs',
         help=default('probability for a duplication to be unlinked'),
-        default=0.5)
+        default=1)
 
     parser.add_option(
         '-n', '--numRepeats', type='int', dest='repeatNumber',
